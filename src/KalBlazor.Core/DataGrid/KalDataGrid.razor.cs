@@ -22,7 +22,7 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
 
     protected override string DefaultClass => "w-full";
 
-    private readonly HashSet<TItem> _expandedItems = [];
+    private readonly HashSet<object?> _expandedItemKeys = [];
     private readonly HashSet<TItem> _descendantFilterMatches = [];
     private bool _defaultExpansionApplied;
     private bool? _pendingDescendantExpansion;
@@ -133,6 +133,13 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
     [Parameter]
     public bool ExpandChildRowsByDefault { get; set; }
 
+    /// <summary>
+    /// Optional selector used to persist row UI state like expanded child rows across re-renders
+    /// when the <see cref="Items" /> collection is recreated with new item instances.
+    /// </summary>
+    [Parameter]
+    public Func<TItem, object?>? ItemKey { get; set; }
+
     [Parameter]
     public string ExpandHeaderText { get; set; } = "Details";
 
@@ -203,8 +210,28 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
         get
         {
             var items = BoundItems.ToArray();
-            return items.Length > 0 && items.All(_expandedItems.Contains);
+            return items.Length > 0 && items.All(IsChildRowExpanded);
         }
+    }
+
+    private object? GetItemKey(TItem item)
+    {
+        return ItemKey?.Invoke(item) ?? item;
+    }
+
+    private object GetPrimaryRowRenderKey(TItem item)
+    {
+        return ("row", GetItemKey(item));
+    }
+
+    private object GetChildRowRenderKey(TItem item)
+    {
+        return ("child", GetItemKey(item));
+    }
+
+    private object GetDescendantFilterProbeRenderKey(TItem item)
+    {
+        return ("probe", GetItemKey(item));
     }
 
     private string? InheritedFilterText => string.IsNullOrWhiteSpace(_currentFilterText)
@@ -346,14 +373,16 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
 
     private bool IsChildRowExpanded(TItem item)
     {
-        return _expandedItems.Contains(item);
+        return _expandedItemKeys.Contains(GetItemKey(item));
     }
 
     private Task ToggleChildRowAsync(TItem item)
     {
-        if (!_expandedItems.Add(item))
+        var itemKey = GetItemKey(item);
+
+        if (!_expandedItemKeys.Add(itemKey))
         {
-            _expandedItems.Remove(item);
+            _expandedItemKeys.Remove(itemKey);
         }
 
         return InvokeAsync(StateHasChanged);
@@ -448,13 +477,15 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
     {
         foreach (var item in BoundItems.ToArray())
         {
+            var itemKey = GetItemKey(item);
+
             if (isExpanded)
             {
-                _expandedItems.Add(item);
+                _expandedItemKeys.Add(itemKey);
             }
             else
             {
-                _expandedItems.Remove(item);
+                _expandedItemKeys.Remove(itemKey);
             }
         }
 
@@ -552,7 +583,7 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
 
         foreach (var item in Items)
         {
-            _expandedItems.Add(item);
+            _expandedItemKeys.Add(GetItemKey(item));
         }
 
         _defaultExpansionApplied = true;

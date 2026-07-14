@@ -4,282 +4,359 @@
 <main class="mx-auto max-w-7xl px-4 py-8">
     <h1 class="mb-6 text-2xl font-semibold text-slate-950">KalDataGrid typed columns</h1>
 
-    <KalDataGrid TItem="CustomerAccount"
-                 Items="@Accounts"
-                 AdditionalHeaderCellClass="sticky top-[7.25rem] z-20 bg-slate-50"
-                 AdditionalClass="my-6">
-        <Filter>
-            <KalDataGridFilter
-                Placeholder="Accounts filtern..."
-                AdditionalClass="sticky top-14 z-30" />
-        </Filter>
+    <div class="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-slate-700">
+        <div class="font-medium text-slate-900">ChildRow-Status testen</div>
+        <p class="mt-1">
+            Öffne eine oder mehrere Detailzeilen und klicke danach auf <strong>Daten neu erzeugen</strong>.
+            Die Demo erstellt dabei bewusst neue Objektinstanzen, damit sich prüfen lässt, ob das Grid geöffnete Child Rows über Re-Renders hinweg behält.
+        </p>
+        <div class="mt-3 flex flex-wrap items-center gap-3">
+            <button type="button"
+                    class="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                    @onclick="RecreateAccounts">
+                Daten neu erzeugen
+            </button>
+            <button type="button"
+                    class="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                    @onclick="TriggerRerender">
+                Nur Re-Render auslösen
+            </button>
+            <span class="text-xs text-slate-500">
+                Reloads: @reloadCount · Re-Renders: @rerenderCount
+            </span>
+        </div>
+    </div>
 
-        <Columns>
-            <KalToggleGridColumn TItem="CustomerAccount"
-                                 HeaderClass="w-24 px-4 py-3"
-                                 AdditionalHeaderClass="bg-slate-50 text-slate-900"
-                                 CellClass="w-24 px-4 py-3 align-top">
-                <CellHeaderTemplate Context="toggle">
-                    <button
-                        type="button"
-                        class="inline-flex items-center rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
-                        aria-expanded="@toggle.AreAllRowsExpanded"
-                        aria-label="@toggle.AriaLabel"
-                        @onclick="toggle.ToggleAsync">
-                        @(toggle.AreAllRowsExpanded ? "Alle zu" : "Alle auf")
-                    </button>
-                </CellHeaderTemplate>
-                <CellTemplate Context="toggle">
-                    <button
-                        type="button"
-                        class="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-300 bg-white text-sm font-semibold text-slate-700 hover:bg-amber-50 hover:text-amber-800"
-                        aria-expanded="@toggle.IsExpanded"
-                        aria-label="@toggle.AriaLabel"
-                        @onclick="toggle.ToggleAsync">
-                        @(toggle.IsExpanded ? "-" : "+")
-                    </button>
-                </CellTemplate>
-            </KalToggleGridColumn>
+    <div class="grid gap-6 xl:grid-cols-2">
+        @RenderAccountGrid(
+            "Ohne ItemKey",
+            "Dieses Grid verliert geöffnete Child Rows, sobald neue Item-Instanzen gerendert werden.",
+            AccountsWithoutItemKey,
+            false)
 
-            <KalGridColumn TItem="CustomerAccount"
-                           Title="Kunde"
-                           Property="@(account => account.Name)"
-                           WidthClass="w-[18rem]"
-                           AdditionalHeaderClass="bg-amber-50 text-amber-900">
-                <CellHeaderTemplate>
-                    <div>Kunde</div>
-                    <div class="text-[0.65rem] font-normal normal-case tracking-normal text-amber-700">
-                        Name und Segment
-                    </div>
-                </CellHeaderTemplate>
-                <CellTemplate Context="account">
-                    <a href="@account.CustomerUrl"
-                       class="font-semibold text-amber-700 hover:text-amber-900 hover:underline">
-                        @account.Name
-                    </a>
-                    <div class="text-xs text-slate-500">@account.Segment</div>
-                </CellTemplate>
-                <CollapsedContent Context="account">
-                    <div>Status: @account.Status</div>
-                    <div>Plan: @account.Plan</div>
-                    <div>Seats: @account.Seats</div>
-                    <div>Tickets: <a href="@account.SupportUrl" class="text-amber-700 hover:underline">@account.OpenTickets offen</a></div>
-                    <div>Owner: <a href="@account.OwnerUrl" class="text-amber-700 hover:underline">@account.Owner</a></div>
-                    <div>Region: @account.Region</div>
-                    <div>MRR: @account.MonthlyRecurringRevenue.ToString("N0") EUR</div>
-                    <div>ARR: @account.AnnualRecurringRevenue.ToString("N0") EUR</div>
-                    <div>Churn Risk: @account.ChurnRiskPercent%</div>
-                </CollapsedContent>
-            </KalGridColumn>
-
-            <KalGridColumn TItem="CustomerAccount"
-                           Title="Status"
-                           Property="@(account => account.Status)"
-                           CollapseBelow="KalDataGridBreakpoint.Md"
-                           AdditionalHeaderClass="bg-amber-50 text-amber-900">
-                <CellTemplate Context="account">
-                    <span class="@GetStatusClass(account.Status)">@account.Status</span>
-                </CellTemplate>
-            </KalGridColumn>
-
-            <KalGridColumn TItem="CustomerAccount"
-                           Title="Plan"
-                           Property="@(account => account.Plan)"
-                           CollapseBelow="KalDataGridBreakpoint.Lg" />
-
-            <KalGridColumn TItem="CustomerAccount"
-                           Title="MRR"
-                           Property="@(account => account.MonthlyRecurringRevenue)"
-                           Alignment="KalDataGridAlignment.End">
-                <CellTemplate Context="account">
-                    @account.MonthlyRecurringRevenue.ToString("N0") EUR
-                </CellTemplate>
-            </KalGridColumn>
-
-            <KalGridColumn TItem="CustomerAccount"
-                           Title="Seats"
-                           Property="@(account => account.Seats)"
-                           Alignment="KalDataGridAlignment.End"
-                           CollapseBelow="KalDataGridBreakpoint.Md" />
-
-            <KalGridColumn TItem="CustomerAccount"
-                           Title="Tickets"
-                           Property="@(account => account.OpenTickets)"
-                           Alignment="KalDataGridAlignment.End"
-                           CollapseBelow="KalDataGridBreakpoint.Lg">
-                <CellTemplate Context="account">
-                    <a href="@account.SupportUrl" class="text-amber-700 hover:underline">
-                        @account.OpenTickets
-                    </a>
-                </CellTemplate>
-            </KalGridColumn>
-
-            <KalGridColumn TItem="CustomerAccount"
-                           Title="Owner"
-                           Property="@(account => account.Owner)"
-                           CollapseBelow="KalDataGridBreakpoint.Xl">
-                <CellTemplate Context="account">
-                    <a href="@account.OwnerUrl" class="text-amber-700 hover:underline">
-                        @account.Owner
-                    </a>
-                </CellTemplate>
-            </KalGridColumn>
-
-            <KalGridColumn TItem="CustomerAccount"
-                           Title="Region"
-                           Property="@(account => account.Region)"
-                           CollapseBelow="KalDataGridBreakpoint.Xl" />
-
-            <KalGridColumn TItem="CustomerAccount"
-                           Title="ARR"
-                           Property="@(account => account.AnnualRecurringRevenue)"
-                           Alignment="KalDataGridAlignment.End"
-                           CollapseBelow="KalDataGridBreakpoint.TwoXl">
-                <CellTemplate Context="account">
-                    @account.AnnualRecurringRevenue.ToString("N0") EUR
-                </CellTemplate>
-            </KalGridColumn>
-
-            <KalGridColumn TItem="CustomerAccount"
-                           Title="Churn Risk"
-                           Property="@(account => account.ChurnRiskPercent)"
-                           Alignment="KalDataGridAlignment.End"
-                           CollapseBelow="KalDataGridBreakpoint.TwoXl">
-                <CellTemplate Context="account">
-                    @account.ChurnRiskPercent%
-                </CellTemplate>
-            </KalGridColumn>
-        </Columns>
-
-        <ChildRowContent Context="account">
-            <KalDataGrid TItem="CustomerInvoice"
-                         Items="@account.Invoices"
-                         TableClass="w-full min-w-full border-collapse text-xs"
-                         HeaderClass="bg-slate-100"
-                         BodyClass="divide-y divide-slate-200"
-                         RowClass="transition-colors hover:bg-slate-50">
-                <Columns>
-                    <KalGridColumn TItem="CustomerInvoice"
-                                   Title="Rechnung"
-                                   Property="@(invoice => invoice.Number)" />
-                    <KalGridColumn TItem="CustomerInvoice"
-                                   Title="Zeitraum"
-                                   Property="@(invoice => invoice.Period)"
-                                   CollapseBelow="KalDataGridBreakpoint.Md" />
-                    <KalGridColumn TItem="CustomerInvoice"
-                                   Title="Betrag"
-                                   Property="@(invoice => invoice.Amount)"
-                                   Alignment="KalDataGridAlignment.End">
-                        <CellTemplate Context="invoice">
-                            @invoice.Amount.ToString("N0") EUR
-                        </CellTemplate>
-                    </KalGridColumn>
-                    <KalGridColumn TItem="CustomerInvoice"
-                                   Title="Status"
-                                   Property="@(invoice => invoice.Status)"
-                                   Alignment="KalDataGridAlignment.End">
-                        <CellTemplate Context="invoice">
-                            <span class="@GetInvoiceStatusClass(invoice.Status)">@invoice.Status</span>
-                        </CellTemplate>
-                    </KalGridColumn>
-                </Columns>
-
-                <ChildRowContent Context="invoice">
-                    <div class="grid gap-2 text-xs text-slate-600 md:grid-cols-2">
-                        @foreach (var line in invoice.Lines)
-                        {
-                            <div class="rounded-md border border-slate-200 bg-white px-3 py-2">
-                                <div class="font-medium text-slate-900">@line.Description</div>
-                                <div>@line.Quantity x @line.UnitPrice.ToString("N0") EUR</div>
-                            </div>
-                        }
-                    </div>
-                </ChildRowContent>
-            </KalDataGrid>
-        </ChildRowContent>
-    </KalDataGrid>
+        @RenderAccountGrid(
+            "Mit ItemKey",
+            "Dieses Grid behält geöffnete Child Rows auch dann, wenn dieselben Einträge als neue Instanzen neu gerendert werden.",
+            AccountsWithItemKey,
+            true)
+    </div>
 </main>
 
 @code {
-    private static readonly List<CustomerAccount> Accounts =
-    [
-        new(
-            "ACME Industries",
-            "/customers/acme-industries",
-            "Enterprise Account",
-            "Aktiv",
-            "Enterprise",
-            15350,
-            184200,
-            248,
-            7,
-            "/support?customer=acme-industries",
-            "Maria Klein",
-            "/team/maria",
-            "DACH",
-            8,
-            [
-                new("INV-2026-001", "Januar 2026", 15350, "Bezahlt", [new("Enterprise Subscription", 1, 15350)]),
-                new("INV-2026-002", "Februar 2026", 15350, "Offen", [new("Enterprise Subscription", 1, 15350)])
-            ]),
-        new(
-            "Northwind Traders",
-            "/customers/northwind",
-            "Mid Market",
-            "Review",
-            "Business",
-            4320,
-            51840,
-            86,
-            14,
-            "/support?customer=northwind",
-            "Tobias Berger",
-            "/team/tobias",
-            "EU West",
-            24,
-            [
-                new("INV-2026-014", "Januar 2026", 4320, "Bezahlt", [new("Business Seats", 86, 50)]),
-                new("INV-2026-015", "Februar 2026", 4320, "Mahnung", [new("Business Seats", 86, 50)])
-            ]),
-        new(
-            "Contoso GmbH",
-            "/customers/contoso",
-            "Strategic Account",
-            "Aktiv",
-            "Enterprise Plus",
-            41000,
-            492000,
-            512,
-            3,
-            "/support?customer=contoso",
-            "Elena Novak",
-            "/team/elena",
-            "Global",
-            3,
-            [
-                new("INV-2026-021", "Januar 2026", 41000, "Bezahlt", [new("Enterprise Plus", 1, 41000)]),
-                new("INV-2026-022", "Februar 2026", 41000, "Offen", [new("Enterprise Plus", 1, 41000)])
-            ]),
-        new(
-            "Fabrikam Logistics",
-            "/customers/fabrikam-logistics",
-            "Growth Account",
-            "At Risk",
-            "Business",
-            2980,
-            35760,
-            43,
-            22,
-            "/support?customer=fabrikam-logistics",
-            "Jonas Weber",
-            "/team/jonas",
-            "EU Central",
-            41,
-            [
-                new("INV-2026-032", "Januar 2026", 2980, "Bezahlt", [new("Business Subscription", 1, 2980)]),
-                new("INV-2026-033", "Februar 2026", 2980, "Mahnung", [new("Business Subscription", 1, 2980)])
-            ])
-    ];
+    private List<CustomerAccount> AccountsWithoutItemKey = CreateAccounts();
+    private List<CustomerAccount> AccountsWithItemKey = CreateAccounts();
+    private int reloadCount;
+    private int rerenderCount;
+
+    private void RecreateAccounts()
+    {
+        AccountsWithoutItemKey = CreateAccounts();
+        AccountsWithItemKey = CreateAccounts();
+        reloadCount++;
+    }
+
+    private void TriggerRerender()
+    {
+        rerenderCount++;
+    }
+
+    private static object? AccountItemKey(CustomerAccount account) => account.CustomerUrl;
+
+    private static object? InvoiceItemKey(CustomerInvoice invoice) => invoice.Number;
+
+    private RenderFragment RenderAccountGrid(string title, string description, IEnumerable<CustomerAccount> items, bool useItemKey) =>
+        @<section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div class="border-b border-slate-200 bg-slate-50 px-4 py-3">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-lg font-semibold text-slate-950">@title</h2>
+                        <p class="mt-1 text-sm text-slate-600">@description</p>
+                    </div>
+                    <span class="rounded-full px-3 py-1 text-xs font-medium @(useItemKey ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800")">
+                        @(useItemKey ? "ItemKey aktiv" : "kein ItemKey")
+                    </span>
+                </div>
+            </div>
+
+            <div class="p-4">
+                <KalDataGrid TItem="CustomerAccount"
+                             Items="@items"
+                             ItemKey="@(useItemKey ? AccountItemKey : null)"
+                             AdditionalClass="my-2">
+                    <Filter>
+                        <KalDataGridFilter Placeholder="Accounts filtern..." />
+                    </Filter>
+
+                    <Columns>
+                        <KalToggleGridColumn TItem="CustomerAccount"
+                                             HeaderClass="w-24 px-4 py-3"
+                                             AdditionalHeaderClass="bg-slate-50 text-slate-900"
+                                             CellClass="w-24 px-4 py-3 align-top">
+                            <CellHeaderTemplate Context="toggle">
+                                <button
+                                    type="button"
+                                    class="inline-flex items-center rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                                    aria-expanded="@toggle.AreAllRowsExpanded"
+                                    aria-label="@toggle.AriaLabel"
+                                    @onclick="toggle.ToggleAsync">
+                                    @(toggle.AreAllRowsExpanded ? "Alle zu" : "Alle auf")
+                                </button>
+                            </CellHeaderTemplate>
+                            <CellTemplate Context="toggle">
+                                <button
+                                    type="button"
+                                    class="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-300 bg-white text-sm font-semibold text-slate-700 hover:bg-amber-50 hover:text-amber-800"
+                                    aria-expanded="@toggle.IsExpanded"
+                                    aria-label="@toggle.AriaLabel"
+                                    @onclick="toggle.ToggleAsync">
+                                    @(toggle.IsExpanded ? "-" : "+")
+                                </button>
+                            </CellTemplate>
+                        </KalToggleGridColumn>
+
+                        <KalGridColumn TItem="CustomerAccount"
+                                       Title="Kunde"
+                                       Property="@(account => account.Name)"
+                                       WidthClass="w-[18rem]"
+                                       AdditionalHeaderClass="bg-amber-50 text-amber-900">
+                            <CellHeaderTemplate>
+                                <div>Kunde</div>
+                                <div class="text-[0.65rem] font-normal normal-case tracking-normal text-amber-700">
+                                    Name und Segment
+                                </div>
+                            </CellHeaderTemplate>
+                            <CellTemplate Context="account">
+                                <a href="@account.CustomerUrl"
+                                   class="font-semibold text-amber-700 hover:text-amber-900 hover:underline">
+                                    @account.Name
+                                </a>
+                                <div class="text-xs text-slate-500">@account.Segment</div>
+                            </CellTemplate>
+                            <CollapsedContent Context="account">
+                                <div>Status: @account.Status</div>
+                                <div>Plan: @account.Plan</div>
+                                <div>Seats: @account.Seats</div>
+                                <div>Tickets: <a href="@account.SupportUrl" class="text-amber-700 hover:underline">@account.OpenTickets offen</a></div>
+                                <div>Owner: <a href="@account.OwnerUrl" class="text-amber-700 hover:underline">@account.Owner</a></div>
+                                <div>Region: @account.Region</div>
+                                <div>MRR: @account.MonthlyRecurringRevenue.ToString("N0") EUR</div>
+                                <div>ARR: @account.AnnualRecurringRevenue.ToString("N0") EUR</div>
+                                <div>Churn Risk: @account.ChurnRiskPercent%</div>
+                            </CollapsedContent>
+                        </KalGridColumn>
+
+                        <KalGridColumn TItem="CustomerAccount"
+                                       Title="Status"
+                                       Property="@(account => account.Status)"
+                                       CollapseBelow="KalDataGridBreakpoint.Md"
+                                       AdditionalHeaderClass="bg-amber-50 text-amber-900">
+                            <CellTemplate Context="account">
+                                <span class="@GetStatusClass(account.Status)">@account.Status</span>
+                            </CellTemplate>
+                        </KalGridColumn>
+
+                        <KalGridColumn TItem="CustomerAccount"
+                                       Title="Plan"
+                                       Property="@(account => account.Plan)"
+                                       CollapseBelow="KalDataGridBreakpoint.Lg" />
+
+                        <KalGridColumn TItem="CustomerAccount"
+                                       Title="MRR"
+                                       Property="@(account => account.MonthlyRecurringRevenue)"
+                                       Alignment="KalDataGridAlignment.End">
+                            <CellTemplate Context="account">
+                                @account.MonthlyRecurringRevenue.ToString("N0") EUR
+                            </CellTemplate>
+                        </KalGridColumn>
+
+                        <KalGridColumn TItem="CustomerAccount"
+                                       Title="Seats"
+                                       Property="@(account => account.Seats)"
+                                       Alignment="KalDataGridAlignment.End"
+                                       CollapseBelow="KalDataGridBreakpoint.Md" />
+
+                        <KalGridColumn TItem="CustomerAccount"
+                                       Title="Tickets"
+                                       Property="@(account => account.OpenTickets)"
+                                       Alignment="KalDataGridAlignment.End"
+                                       CollapseBelow="KalDataGridBreakpoint.Lg">
+                            <CellTemplate Context="account">
+                                <a href="@account.SupportUrl" class="text-amber-700 hover:underline">
+                                    @account.OpenTickets
+                                </a>
+                            </CellTemplate>
+                        </KalGridColumn>
+
+                        <KalGridColumn TItem="CustomerAccount"
+                                       Title="Owner"
+                                       Property="@(account => account.Owner)"
+                                       CollapseBelow="KalDataGridBreakpoint.Xl">
+                            <CellTemplate Context="account">
+                                <a href="@account.OwnerUrl" class="text-amber-700 hover:underline">
+                                    @account.Owner
+                                </a>
+                            </CellTemplate>
+                        </KalGridColumn>
+
+                        <KalGridColumn TItem="CustomerAccount"
+                                       Title="Region"
+                                       Property="@(account => account.Region)"
+                                       CollapseBelow="KalDataGridBreakpoint.Xl" />
+
+                        <KalGridColumn TItem="CustomerAccount"
+                                       Title="ARR"
+                                       Property="@(account => account.AnnualRecurringRevenue)"
+                                       Alignment="KalDataGridAlignment.End"
+                                       CollapseBelow="KalDataGridBreakpoint.TwoXl">
+                            <CellTemplate Context="account">
+                                @account.AnnualRecurringRevenue.ToString("N0") EUR
+                            </CellTemplate>
+                        </KalGridColumn>
+
+                        <KalGridColumn TItem="CustomerAccount"
+                                       Title="Churn Risk"
+                                       Property="@(account => account.ChurnRiskPercent)"
+                                       Alignment="KalDataGridAlignment.End"
+                                       CollapseBelow="KalDataGridBreakpoint.TwoXl">
+                            <CellTemplate Context="account">
+                                @account.ChurnRiskPercent%
+                            </CellTemplate>
+                        </KalGridColumn>
+                    </Columns>
+
+                    <ChildRowContent Context="account">
+                        <KalDataGrid TItem="CustomerInvoice"
+                                     Items="@account.Invoices"
+                                     ItemKey="@(useItemKey ? InvoiceItemKey : null)"
+                                     TableClass="w-full min-w-full border-collapse text-xs"
+                                     HeaderClass="bg-slate-100"
+                                     BodyClass="divide-y divide-slate-200"
+                                     RowClass="transition-colors hover:bg-slate-50">
+                            <Columns>
+                                <KalGridColumn TItem="CustomerInvoice"
+                                               Title="Rechnung"
+                                               Property="@(invoice => invoice.Number)" />
+                                <KalGridColumn TItem="CustomerInvoice"
+                                               Title="Zeitraum"
+                                               Property="@(invoice => invoice.Period)"
+                                               CollapseBelow="KalDataGridBreakpoint.Md" />
+                                <KalGridColumn TItem="CustomerInvoice"
+                                               Title="Betrag"
+                                               Property="@(invoice => invoice.Amount)"
+                                               Alignment="KalDataGridAlignment.End">
+                                    <CellTemplate Context="invoice">
+                                        @invoice.Amount.ToString("N0") EUR
+                                    </CellTemplate>
+                                </KalGridColumn>
+                                <KalGridColumn TItem="CustomerInvoice"
+                                               Title="Status"
+                                               Property="@(invoice => invoice.Status)"
+                                               Alignment="KalDataGridAlignment.End">
+                                    <CellTemplate Context="invoice">
+                                        <span class="@GetInvoiceStatusClass(invoice.Status)">@invoice.Status</span>
+                                    </CellTemplate>
+                                </KalGridColumn>
+                            </Columns>
+
+                            <ChildRowContent Context="invoice">
+                                <div class="grid gap-2 text-xs text-slate-600 md:grid-cols-2">
+                                    @foreach (var line in invoice.Lines)
+                                    {
+                                        <div class="rounded-md border border-slate-200 bg-white px-3 py-2">
+                                            <div class="font-medium text-slate-900">@line.Description</div>
+                                            <div>@line.Quantity x @line.UnitPrice.ToString("N0") EUR</div>
+                                        </div>
+                                    }
+                                </div>
+                            </ChildRowContent>
+                        </KalDataGrid>
+                    </ChildRowContent>
+                </KalDataGrid>
+            </div>
+        </section>;
+
+    private static List<CustomerAccount> CreateAccounts()
+    {
+        return
+        [
+            new(
+                "ACME Industries",
+                "/customers/acme-industries",
+                "Enterprise Account",
+                "Aktiv",
+                "Enterprise",
+                15350,
+                184200,
+                248,
+                7,
+                "/support?customer=acme-industries",
+                "Maria Klein",
+                "/team/maria",
+                "DACH",
+                8,
+                [
+                    new("INV-2026-001", "Januar 2026", 15350, "Bezahlt", [new("Enterprise Subscription", 1, 15350)]),
+                    new("INV-2026-002", "Februar 2026", 15350, "Offen", [new("Enterprise Subscription", 1, 15350)])
+                ]),
+            new(
+                "Northwind Traders",
+                "/customers/northwind",
+                "Mid Market",
+                "Review",
+                "Business",
+                4320,
+                51840,
+                86,
+                14,
+                "/support?customer=northwind",
+                "Tobias Berger",
+                "/team/tobias",
+                "EU West",
+                24,
+                [
+                    new("INV-2026-014", "Januar 2026", 4320, "Bezahlt", [new("Business Seats", 86, 50)]),
+                    new("INV-2026-015", "Februar 2026", 4320, "Mahnung", [new("Business Seats", 86, 50)])
+                ]),
+            new(
+                "Contoso GmbH",
+                "/customers/contoso",
+                "Strategic Account",
+                "Aktiv",
+                "Enterprise Plus",
+                41000,
+                492000,
+                512,
+                3,
+                "/support?customer=contoso",
+                "Elena Novak",
+                "/team/elena",
+                "Global",
+                3,
+                [
+                    new("INV-2026-021", "Januar 2026", 41000, "Bezahlt", [new("Enterprise Plus", 1, 41000)]),
+                    new("INV-2026-022", "Februar 2026", 41000, "Offen", [new("Enterprise Plus", 1, 41000)])
+                ]),
+            new(
+                "Fabrikam Logistics",
+                "/customers/fabrikam-logistics",
+                "Growth Account",
+                "At Risk",
+                "Business",
+                2980,
+                35760,
+                43,
+                22,
+                "/support?customer=fabrikam-logistics",
+                "Jonas Weber",
+                "/team/jonas",
+                "EU Central",
+                41,
+                [
+                    new("INV-2026-032", "Januar 2026", 2980, "Bezahlt", [new("Business Subscription", 1, 2980)]),
+                    new("INV-2026-033", "Februar 2026", 2980, "Mahnung", [new("Business Subscription", 1, 2980)])
+                ])
+        ];
+    }
 
     private static string GetStatusClass(string status)
     {
