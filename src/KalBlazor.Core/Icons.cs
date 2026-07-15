@@ -11,6 +11,7 @@ public static class Icons
     public const string ArrowRight = "arrow-right";
     public const string ArrowUp = "arrow-up";
     public const string Bars = "bars";
+    public const string Check = "check";
     public const string CircleInfo = "circle-info";
     public const string Clapperboard = "clapperboard";
     public const string Document = "document";
@@ -26,6 +27,7 @@ public static class Icons
     public const string Plus = "plus";
     public const string Printer = "printer";
     public const string Search = "search";
+    public const string Settings = "settings";
     public const string TableCells = "table-cells";
     public const string Trash = "trash";
     public const string TriangleExclamation = "triangle-exclamation";
