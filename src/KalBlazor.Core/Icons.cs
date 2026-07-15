@@ -18,6 +18,7 @@ public static class Icons
     public const string ExcelDocument = "excel-document";
     public const string ExclamationCircle = "exclamation-circle";
     public const string FileArrowUp = "file-arrow-up";
+    public const string FileInvoiceEuro = "file-invoice-euro";
     public const string FileLines = "file-lines";
     public const string Filter = "filter";
     public const string Graph = "graph";
@@ -32,5 +33,6 @@ public static class Icons
     public const string Trash = "trash";
     public const string TriangleExclamation = "triangle-exclamation";
     public const string UserKey = "user-key";
+    public const string Users = "users";
     public const string X = "x";
 }
