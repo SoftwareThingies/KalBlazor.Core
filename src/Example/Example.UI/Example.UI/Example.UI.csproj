@@ -9,7 +9,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Example.UI.Client\Example.UI.Client.csproj"/>
-        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.7"/>
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.10" />
     </ItemGroup>
 
     <Target Name="BuildTailwindCss" BeforeTargets="ComputeStaticWebAssets">
