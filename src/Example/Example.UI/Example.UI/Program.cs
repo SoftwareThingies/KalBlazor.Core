@@ -1,4 +1,3 @@
-using Example.UI.Client.Pages;
 using Example.UI.Components;
 
 var builder = WebApplication.CreateBuilder(args);

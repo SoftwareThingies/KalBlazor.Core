@@ -51,6 +51,8 @@ public partial class KalToggleGridColumn<TItem> : IDisposable
         }
     }
 
+    internal IReadOnlyDictionary<string, object>? HeaderAttributes => FilteredAdditionalAttributes;
+
     internal string CellCssClass
     {
         get
@@ -62,6 +64,8 @@ public partial class KalToggleGridColumn<TItem> : IDisposable
             return $"{effectiveClass} {AdditionalCellClass}".Trim();
         }
     }
+
+    internal IReadOnlyDictionary<string, object>? CellAttributes => FilteredAdditionalAttributes;
 
     protected override void OnInitialized()
     {

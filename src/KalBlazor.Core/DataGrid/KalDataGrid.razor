@@ -48,13 +48,13 @@
                         {
                             @if (entry is KalToggleGridColumn<TItem> childRowColumn)
                             {
-                                <th class="@childRowColumn.HeaderCssClass" scope="@childRowColumn.Scope">
+                                <th @attributes="childRowColumn.HeaderAttributes" class="@childRowColumn.HeaderCssClass" scope="@childRowColumn.Scope">
                                     @RenderChildRowHeader(childRowColumn)
                                 </th>
                             }
                             else if (entry is KalGridColumn<TItem> column)
                             {
-                                <th class="@GetHeaderCellCssClass(column)" scope="@column.Scope">
+                                <th @attributes="column.HeaderAttributes" class="@GetHeaderCellCssClass(column)" scope="@column.Scope">
                                     @column.HeaderContent
                                 </th>
                             }
@@ -78,13 +78,13 @@
                             {
                                 @if (entry is KalToggleGridColumn<TItem> childRowColumn)
                                 {
-                                    <td class="@childRowColumn.CellCssClass">
+                                    <td @attributes="childRowColumn.CellAttributes" class="@childRowColumn.CellCssClass">
                                         @RenderChildRowToggle(childRowColumn, item, isChildRowExpanded)
                                     </td>
                                 }
                                 else if (entry is KalGridColumn<TItem> column)
                                 {
-                                    <td class="@column.CellCssClass">
+                                    <td @attributes="column.GetCellAttributes(item)" class="@column.CellCssClass">
                                         @column.RenderCell(item)
 
                                         @if (column.CollapsedContent is not null)

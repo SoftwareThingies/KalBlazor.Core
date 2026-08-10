@@ -1,4 +1,3 @@
-using SoftwareThingies.UI.Client.Pages;
 using SoftwareThingies.UI.Components;
 
 var builder = WebApplication.CreateBuilder(args);

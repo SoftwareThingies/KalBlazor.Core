@@ -3,22 +3,33 @@
 @* <KalThemeBootstrap /> *@
 
 <KalLayout>
-    <KalAppBar Fixed>
-        <KalAppBarToggle HorizontalAlignment="KalHorizontalAlignment.Right"/>
-        <KalCollapsible HorizontalAlignment="KalHorizontalAlignment.Left">
+    <KalAppBar Fixed
+               Tooltip="@AppBarTooltip"
+               TooltipClass="@TooltipBrandClass">
+        <KalAppBarToggle HorizontalAlignment="KalHorizontalAlignment.Right"
+                         Tooltip="@AppBarToggleTooltip"
+                         TooltipClass="@TooltipOutlineClass" />
+        <KalCollapsible HorizontalAlignment="KalHorizontalAlignment.Left"
+                        Tooltip="@CollapsibleTooltip"
+                        TooltipClass="@TooltipPanelClass">
             <div>Test 1</div>
             <div>Test 2</div>
             <div>Test 3</div>
             <div>Test 4</div>
-            <KalDrawerTrigger TargetId="left-menu">
+            <KalDrawerTrigger TargetId="left-menu"
+                              Tooltip="@LeftDrawerTriggerTooltip"
+                              TooltipClass="@TooltipOutlineClass">
                 Links öffnen
             </KalDrawerTrigger>
     
-            <KalDrawerTrigger TargetName="right-menu">
+            <KalDrawerTrigger TargetName="right-menu"
+                              Tooltip="@RightDrawerTriggerTooltip"
+                              TooltipClass="@TooltipPanelClass">
                 Rechts öffnen
             </KalDrawerTrigger>
     
-            <KalThemeToggle>
+            <KalThemeToggle Tooltip="@ThemeToggleTooltip"
+                            TooltipClass="@TooltipSuccessClass">
                 Dark Mode
             </KalThemeToggle>
         </KalCollapsible>
@@ -261,6 +272,16 @@
 </KalLayout>  
 
 @code {
+    private const string TooltipBrandClass = "max-w-md rounded-xl border border-white/25 bg-gradient-to-br from-red-900 to-amber-700 px-3 py-2 text-sm font-bold leading-5 text-white shadow-2xl";
+    private const string TooltipPanelClass = "max-w-md rounded-2xl border border-slate-600 bg-slate-950/95 px-4 py-3 text-sm font-medium leading-5 text-slate-50 shadow-2xl";
+    private const string TooltipSuccessClass = "max-w-md rounded-xl border border-emerald-300 bg-emerald-900/95 px-3 py-2 text-sm font-semibold leading-5 text-emerald-50 shadow-xl";
+    private const string TooltipOutlineClass = "max-w-md rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold leading-5 text-slate-950 shadow-xl";
+    private const string AppBarTooltip = "KalAppBar\nThe existing app bar now hosts the navigation tooltip examples.";
+    private const string AppBarToggleTooltip = "KalAppBarToggle\nToggles the collapsible navigation in the app bar.";
+    private const string CollapsibleTooltip = "KalCollapsible\nThe navigation container also participates in the shared tooltip system.";
+    private const string LeftDrawerTriggerTooltip = "KalDrawerTrigger\nOpens the left drawer from the existing app bar.";
+    private const string RightDrawerTriggerTooltip = "KalDrawerTrigger\nOpens the right drawer from the existing app bar.";
+    private const string ThemeToggleTooltip = "KalThemeToggle\nSwitch between light and dark mode.";
     private KalDrawerBackdrop _leftDrawerBackdrop = KalDrawerBackdrop.Darkened;
     private KalDrawerState _leftDrawerState = KalDrawerState.Maximized;
     private bool _preventLeftDrawerClose;
