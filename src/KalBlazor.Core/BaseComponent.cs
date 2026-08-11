@@ -16,6 +16,18 @@ public abstract class BaseComponent : ComponentBase
     [Parameter]
     public string? AdditionalClass { get; set; }
 
+    /// <summary>
+    /// Plain text tooltip content shown when the pointer hovers the component root element.
+    /// </summary>
+    [Parameter]
+    public string? Tooltip { get; set; }
+
+    /// <summary>
+    /// Tailwind utility classes applied to the shared tooltip host when this component is hovered.
+    /// </summary>
+    [Parameter]
+    public string? TooltipClass { get; set; }
+
     [Parameter(CaptureUnmatchedValues = true)]
     public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
 
@@ -25,10 +37,7 @@ public abstract class BaseComponent : ComponentBase
 
     protected virtual string DynamicClass => string.Empty;
 
-    protected IReadOnlyDictionary<string, object>? FilteredAdditionalAttributes =>
-        AdditionalAttributes?
-            .Where(attribute => !IsClassAttribute(attribute.Key))
-            .ToDictionary(StringComparer.OrdinalIgnoreCase);
+    protected IReadOnlyDictionary<string, object>? FilteredAdditionalAttributes => BuildFilteredAdditionalAttributes();
 
     protected string CssClass
     {
@@ -46,6 +55,43 @@ public abstract class BaseComponent : ComponentBase
 
             return $"{ComponentClass} {effectiveClass} {AdditionalClass}".Trim();
         }
+    }
+
+    protected IReadOnlyDictionary<string, object>? BuildFilteredAdditionalAttributes(
+        string? tooltip = null,
+        string? tooltipClass = null)
+    {
+        Dictionary<string, object>? filteredAttributes = null;
+        var effectiveTooltip = string.IsNullOrWhiteSpace(tooltip) ? Tooltip : tooltip;
+        var effectiveTooltipClass = string.IsNullOrWhiteSpace(tooltipClass) ? TooltipClass : tooltipClass;
+
+        if (AdditionalAttributes is not null)
+        {
+            filteredAttributes = AdditionalAttributes
+                .Where(attribute => !IsClassAttribute(attribute.Key))
+                .ToDictionary(StringComparer.OrdinalIgnoreCase);
+        }
+
+        if (!string.IsNullOrWhiteSpace(effectiveTooltip))
+        {
+            AddFilteredAttribute(ref filteredAttributes, "data-kal-tooltip", effectiveTooltip!);
+
+            if (!string.IsNullOrWhiteSpace(effectiveTooltipClass))
+            {
+                AddFilteredAttribute(ref filteredAttributes, "data-kal-tooltip-class", effectiveTooltipClass!);
+            }
+        }
+
+        return filteredAttributes is { Count: > 0 } ? filteredAttributes : null;
+    }
+
+    private static void AddFilteredAttribute(
+        ref Dictionary<string, object>? filteredAttributes,
+        string key,
+        string value)
+    {
+        filteredAttributes ??= new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+        filteredAttributes[key] = value;
     }
 
     private bool TryGetAttributeClass(out string attributeClass)

@@ -37,6 +37,12 @@ public partial class KalGridColumn<TItem> : IDisposable
     public RenderFragment<TItem>? CellTemplate { get; set; }
 
     [Parameter]
+    public Func<TItem, string?>? CellTooltip { get; set; }
+
+    [Parameter]
+    public string? CellTooltipClass { get; set; }
+
+    [Parameter]
     public KalDataGridAlignment Alignment { get; set; } = KalDataGridAlignment.Start;
 
     /// <summary>
@@ -91,6 +97,8 @@ public partial class KalGridColumn<TItem> : IDisposable
         }
     }
 
+    internal IReadOnlyDictionary<string, object>? HeaderAttributes => FilteredAdditionalAttributes;
+
     internal string CellCssClass
     {
         get
@@ -101,6 +109,15 @@ public partial class KalGridColumn<TItem> : IDisposable
 
             return $"{effectiveClass} {AdditionalCellClass}".Trim();
         }
+    }
+
+    internal IReadOnlyDictionary<string, object>? GetCellAttributes(TItem item)
+    {
+        var cellTooltip = CellTooltip?.Invoke(item);
+        var effectiveTooltip = string.IsNullOrWhiteSpace(cellTooltip) ? Tooltip : cellTooltip;
+        var effectiveTooltipClass = string.IsNullOrWhiteSpace(CellTooltipClass) ? TooltipClass : CellTooltipClass;
+
+        return BuildFilteredAdditionalAttributes(effectiveTooltip, effectiveTooltipClass);
     }
 
     internal string CollapsedContentCssClass

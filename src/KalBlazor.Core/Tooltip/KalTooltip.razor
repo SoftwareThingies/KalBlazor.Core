@@ -1,0 +1,135 @@
+@namespace SoftwareThingies.KalBlazor.Core
+@implements IAsyncDisposable
+@inject IJSRuntime JsRuntime
+
+@if (IsVisible && !string.IsNullOrWhiteSpace(TooltipText))
+{
+    <div class="@TooltipCssClass"
+         @ref="_tooltipElement"
+         data-kal-tooltip-host="true"
+         role="tooltip"
+         aria-hidden="false"
+         style="@TooltipStyle">
+        @TooltipText
+    </div>
+}
+
+@code {
+    private const double OffsetX = 16;
+    private const double OffsetY = 20;
+    private const string TooltipBaseClass = "fixed left-0 top-0 z-[2147483647] max-w-[min(24rem,calc(100vw-1rem))] whitespace-pre-line break-words pointer-events-none [transform:translate3d(0,0,0)] transition-opacity duration-75 ease-out";
+    private const string TooltipDefaultClass = "border px-3 py-2 leading-5 bg-white";
+
+    private DotNetObjectReference<KalTooltip>? _dotNetReference;
+    private IJSObjectReference? _module;
+    private ElementReference _tooltipElement;
+    private bool _isTooltipElementRegistered;
+    private bool IsVisible { get; set; }
+    private string? TooltipText { get; set; }
+    private string? TooltipClass { get; set; }
+    private double ClientX { get; set; }
+    private double ClientY { get; set; }
+
+    private string TooltipCssClass =>
+        $"{TooltipBaseClass} {(string.IsNullOrWhiteSpace(TooltipClass) ? TooltipDefaultClass : TooltipClass)}".Trim();
+
+    private string TooltipStyle =>
+        $"left:0px;top:0px;visibility:hidden;";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _module = await JsRuntime.InvokeAsync<IJSObjectReference>(
+                "import", "./_content/SoftwareThingies.KalBlazor.Core/Tooltip/KalTooltip.razor.js");
+
+            _dotNetReference = DotNetObjectReference.Create(this);
+            await _module.InvokeVoidAsync("initializeKalTooltips", _dotNetReference);
+        }
+
+        if (_module is null)
+        {
+            return;
+        }
+
+        if (IsVisible && !string.IsNullOrWhiteSpace(TooltipText))
+        {
+            await _module.InvokeVoidAsync("setKalTooltipElement", _tooltipElement, ClientX, ClientY, OffsetX, OffsetY);
+            _isTooltipElementRegistered = true;
+            return;
+        }
+
+        if (_isTooltipElementRegistered)
+        {
+            await _module.InvokeVoidAsync("clearKalTooltipElement");
+            _isTooltipElementRegistered = false;
+        }
+    }
+
+    [JSInvokable]
+    public Task ShowTooltip(string tooltipText, string? tooltipClass, double clientX, double clientY)
+    {
+        SetTooltipState(tooltipText, tooltipClass, clientX, clientY);
+
+        return InvokeAsync(StateHasChanged);
+    }
+
+    [JSInvokable]
+    public Task UpdateTooltipPosition(double clientX, double clientY)
+    {
+        SetTooltipPosition(clientX, clientY);
+        return Task.CompletedTask;
+    }
+
+    [JSInvokable]
+    public Task HideTooltip()
+    {
+        if (!IsVisible && string.IsNullOrWhiteSpace(TooltipText))
+        {
+            return Task.CompletedTask;
+        }
+
+        ClearTooltipState();
+
+        return InvokeAsync(StateHasChanged);
+    }
+
+    private void SetTooltipState(string tooltipText, string? tooltipClass, double clientX, double clientY)
+    {
+        TooltipText = tooltipText;
+        TooltipClass = tooltipClass;
+        SetTooltipPosition(clientX, clientY);
+        IsVisible = !string.IsNullOrWhiteSpace(tooltipText);
+    }
+
+    private void SetTooltipPosition(double clientX, double clientY)
+    {
+        ClientX = clientX;
+        ClientY = clientY;
+    }
+
+    private void ClearTooltipState()
+    {
+        IsVisible = false;
+        TooltipText = null;
+        TooltipClass = null;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _dotNetReference?.Dispose();
+
+        if (_module is not null)
+        {
+            try
+            {
+                await _module.InvokeVoidAsync("disposeKalTooltips");
+                await _module.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+                // The Blazor Server circuit can disconnect before JS module disposal runs.
+            }
+        }
+    }
+}

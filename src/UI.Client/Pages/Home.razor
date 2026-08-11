@@ -4,6 +4,76 @@
 <main class="mx-auto max-w-7xl px-4 py-8">
     <h1 class="mb-6 text-2xl font-semibold text-slate-950">KalDataGrid typed columns</h1>
 
+    <section class="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+            <div class="max-w-3xl">
+                <h2 class="text-lg font-semibold text-slate-950">Tooltip examples</h2>
+                <p class="mt-2 text-sm text-slate-600">
+                    The standalone tooltip page is gone. Tooltip examples now live here on the home page and in the existing app bar above.
+                </p>
+                <p class="mt-2 text-sm text-slate-600">
+                    Hover the drawer trigger, icon, footer card, and grid surfaces to see the shared tooltip behavior and custom tooltip styles.
+                </p>
+            </div>
+
+            <KalDrawerTrigger TargetId="home-tooltip-drawer"
+                              Tooltip="@DrawerOpenTooltip">
+                <span class="inline-flex rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                    Tooltip-Drawer öffnen
+                </span>
+            </KalDrawerTrigger>
+        </div>
+
+        <div class="mt-4 grid gap-4 lg:grid-cols-[1fr_auto]">
+            <KalFooterContent Class="rounded-lg border border-slate-200 bg-slate-50 p-4 text-left"
+                              Tooltip="@FooterTooltip"
+                              TooltipClass="@OutlineTooltipClass">
+                <div class="flex items-center gap-3 text-sm text-slate-700">
+                    <KalIcon Icon="@Icons.Document"
+                             AdditionalClass="text-xl text-amber-600"
+                             Tooltip="@IconTooltip"
+                             TooltipClass="@IceTooltipClass" />
+                    <div>
+                        <div class="font-medium text-slate-900">Content surface</div>
+                        <div><code>KalFooterContent</code> and nested components can show shared tooltips without a separate demo page.</div>
+                    </div>
+                </div>
+            </KalFooterContent>
+
+            <div class="rounded-lg border border-dashed border-slate-300 p-4 text-sm text-slate-600"
+                 title="Hover the KalBlazor controls nearby to compare native browser and shared component tooltips.">
+                The app bar covers navigation examples; the home page covers content and grid examples.
+            </div>
+        </div>
+
+        <div class="mt-6 rounded-xl border border-sky-200 bg-sky-50 p-5">
+            <div class="max-w-3xl">
+                <h3 class="text-base font-semibold text-sky-950">Touch tooltip demo</h3>
+                <p class="mt-2 text-sm text-sky-900">
+                    On phones and tablets, tap the cards below to open their tooltip. Tap the same card again or tap elsewhere to close it.
+                </p>
+            </div>
+
+            <div class="mt-4 grid gap-3 sm:grid-cols-3">
+                <div class="rounded-xl border border-sky-300 bg-white p-4 text-sm font-medium text-sky-950 shadow-sm"
+                     data-kal-tooltip="@TouchStartTooltip"
+                     data-kal-tooltip-class="@IceTooltipClass">
+                    Tap target 1
+                </div>
+                <div class="rounded-xl border border-sky-300 bg-white p-4 text-sm font-medium text-sky-950 shadow-sm sm:text-center"
+                     data-kal-tooltip="@TouchCenterTooltip"
+                     data-kal-tooltip-class="@OutlineTooltipClass">
+                    Tap target 2
+                </div>
+                <div class="rounded-xl border border-sky-300 bg-white p-4 text-sm font-medium text-sky-950 shadow-sm sm:text-right"
+                     data-kal-tooltip="@TouchEndTooltip"
+                     data-kal-tooltip-class="@SuccessTooltipClass">
+                    Tap target 3
+                </div>
+            </div>
+        </div>
+    </section>
+
     <div class="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-slate-700">
         <div class="font-medium text-slate-900">ChildRow-Status testen</div>
         <p class="mt-1">
@@ -82,7 +152,9 @@
                 <KalDataGrid TItem="CustomerAccount"
                              Items="@items"
                              ItemKey="@(useItemKey ? AccountItemKey : null)"
-                             AdditionalClass="my-2">
+                             AdditionalClass="my-2"
+                             Tooltip="@GetGridTooltip(title)"
+                             TooltipClass="@PanelTooltipClass">
                     <Filter>
                         <KalDataGridFilter Placeholder="Accounts filtern..." />
                     </Filter>
@@ -118,7 +190,10 @@
                                        Title="Kunde"
                                        Property="@(account => account.Name)"
                                        WidthClass="w-[18rem]"
-                                       AdditionalHeaderClass="bg-amber-50 text-amber-900">
+                                       AdditionalHeaderClass="bg-amber-50 text-amber-900"
+                                       Tooltip="@CustomerColumnTooltip"
+                                       CellTooltip="GetCustomerTooltip"
+                                       TooltipClass="@BrandTooltipClass">
                             <CellHeaderTemplate>
                                 <div>Kunde</div>
                                 <div class="text-[0.65rem] font-normal normal-case tracking-normal text-amber-700">
@@ -127,7 +202,8 @@
                             </CellHeaderTemplate>
                             <CellTemplate Context="account">
                                 <a href="@account.CustomerUrl"
-                                   class="font-semibold text-amber-700 hover:text-amber-900 hover:underline">
+                                   class="font-semibold text-amber-700 hover:text-amber-900 hover:underline"
+                                   title="Customer profile link">
                                     @account.Name
                                 </a>
                                 <div class="text-xs text-slate-500">@account.Segment</div>
@@ -149,21 +225,31 @@
                                        Title="Status"
                                        Property="@(account => account.Status)"
                                        CollapseBelow="KalDataGridBreakpoint.Md"
-                                       AdditionalHeaderClass="bg-amber-50 text-amber-900">
+                                       AdditionalHeaderClass="bg-amber-50 text-amber-900"
+                                       Tooltip="@StatusColumnTooltip"
+                                       CellTooltip="GetStatusTooltip"
+                                       TooltipClass="@OutlineTooltipClass">
                             <CellTemplate Context="account">
-                                <span class="@GetStatusClass(account.Status)">@account.Status</span>
+                                <span class="@GetStatusClass(account.Status)"
+                                      title="Status badge">
+                                    @account.Status
+                                </span>
                             </CellTemplate>
                         </KalGridColumn>
 
                         <KalGridColumn TItem="CustomerAccount"
                                        Title="Plan"
                                        Property="@(account => account.Plan)"
-                                       CollapseBelow="KalDataGridBreakpoint.Lg" />
+                                       CollapseBelow="KalDataGridBreakpoint.Lg"
+                                       Tooltip="@PlanColumnTooltip"
+                                       CellTooltip="GetPlanTooltip" />
 
                         <KalGridColumn TItem="CustomerAccount"
                                        Title="MRR"
                                        Property="@(account => account.MonthlyRecurringRevenue)"
-                                       Alignment="KalDataGridAlignment.End">
+                                       Alignment="KalDataGridAlignment.End"
+                                       Tooltip="@MrrColumnTooltip"
+                                       CellTooltip="GetMrrTooltip">
                             <CellTemplate Context="account">
                                 @account.MonthlyRecurringRevenue.ToString("N0") EUR
                             </CellTemplate>
@@ -173,13 +259,18 @@
                                        Title="Seats"
                                        Property="@(account => account.Seats)"
                                        Alignment="KalDataGridAlignment.End"
-                                       CollapseBelow="KalDataGridBreakpoint.Md" />
+                                       CollapseBelow="KalDataGridBreakpoint.Md"
+                                       Tooltip="@SeatsColumnTooltip"
+                                       CellTooltip="GetSeatsTooltip" />
 
                         <KalGridColumn TItem="CustomerAccount"
                                        Title="Tickets"
                                        Property="@(account => account.OpenTickets)"
                                        Alignment="KalDataGridAlignment.End"
-                                       CollapseBelow="KalDataGridBreakpoint.Lg">
+                                       CollapseBelow="KalDataGridBreakpoint.Lg"
+                                       Tooltip="@TicketsColumnTooltip"
+                                       CellTooltip="GetTicketsTooltip"
+                                       TooltipClass="@IceTooltipClass">
                             <CellTemplate Context="account">
                                 <a href="@account.SupportUrl" class="text-amber-700 hover:underline">
                                     @account.OpenTickets
@@ -190,7 +281,10 @@
                         <KalGridColumn TItem="CustomerAccount"
                                        Title="Owner"
                                        Property="@(account => account.Owner)"
-                                       CollapseBelow="KalDataGridBreakpoint.Xl">
+                                       CollapseBelow="KalDataGridBreakpoint.Xl"
+                                       Tooltip="@OwnerColumnTooltip"
+                                       CellTooltip="GetOwnerTooltip"
+                                       TooltipClass="@SuccessTooltipClass">
                             <CellTemplate Context="account">
                                 <a href="@account.OwnerUrl" class="text-amber-700 hover:underline">
                                     @account.Owner
@@ -201,13 +295,17 @@
                         <KalGridColumn TItem="CustomerAccount"
                                        Title="Region"
                                        Property="@(account => account.Region)"
-                                       CollapseBelow="KalDataGridBreakpoint.Xl" />
+                                       CollapseBelow="KalDataGridBreakpoint.Xl"
+                                       Tooltip="@RegionColumnTooltip"
+                                       CellTooltip="GetRegionTooltip" />
 
                         <KalGridColumn TItem="CustomerAccount"
                                        Title="ARR"
                                        Property="@(account => account.AnnualRecurringRevenue)"
                                        Alignment="KalDataGridAlignment.End"
-                                       CollapseBelow="KalDataGridBreakpoint.TwoXl">
+                                       CollapseBelow="KalDataGridBreakpoint.TwoXl"
+                                       Tooltip="@ArrColumnTooltip"
+                                       CellTooltip="GetArrTooltip">
                             <CellTemplate Context="account">
                                 @account.AnnualRecurringRevenue.ToString("N0") EUR
                             </CellTemplate>
@@ -217,7 +315,9 @@
                                        Title="Churn Risk"
                                        Property="@(account => account.ChurnRiskPercent)"
                                        Alignment="KalDataGridAlignment.End"
-                                       CollapseBelow="KalDataGridBreakpoint.TwoXl">
+                                       CollapseBelow="KalDataGridBreakpoint.TwoXl"
+                                       Tooltip="@ChurnRiskColumnTooltip"
+                                       CellTooltip="GetChurnRiskTooltip">
                             <CellTemplate Context="account">
                                 @account.ChurnRiskPercent%
                             </CellTemplate>
@@ -228,6 +328,8 @@
                         <KalDataGrid TItem="CustomerInvoice"
                                      Items="@account.Invoices"
                                      ItemKey="@(useItemKey ? InvoiceItemKey : null)"
+                                     Tooltip="@GetInvoiceGridTooltip(account)"
+                                     TooltipClass="@OutlineTooltipClass"
                                      TableClass="w-full min-w-full border-collapse text-xs"
                                      HeaderClass="bg-slate-100"
                                      BodyClass="divide-y divide-slate-200"
@@ -235,15 +337,21 @@
                             <Columns>
                                 <KalGridColumn TItem="CustomerInvoice"
                                                Title="Rechnung"
-                                               Property="@(invoice => invoice.Number)" />
+                                               Property="@(invoice => invoice.Number)"
+                                               Tooltip="@InvoiceNumberColumnTooltip"
+                                               CellTooltip="GetInvoiceNumberTooltip" />
                                 <KalGridColumn TItem="CustomerInvoice"
                                                Title="Zeitraum"
                                                Property="@(invoice => invoice.Period)"
-                                               CollapseBelow="KalDataGridBreakpoint.Md" />
+                                               CollapseBelow="KalDataGridBreakpoint.Md"
+                                               Tooltip="@InvoicePeriodColumnTooltip"
+                                               CellTooltip="GetInvoicePeriodTooltip" />
                                 <KalGridColumn TItem="CustomerInvoice"
                                                Title="Betrag"
                                                Property="@(invoice => invoice.Amount)"
-                                               Alignment="KalDataGridAlignment.End">
+                                               Alignment="KalDataGridAlignment.End"
+                                               Tooltip="@InvoiceAmountColumnTooltip"
+                                               CellTooltip="GetInvoiceAmountTooltip">
                                     <CellTemplate Context="invoice">
                                         @invoice.Amount.ToString("N0") EUR
                                     </CellTemplate>
@@ -251,7 +359,9 @@
                                 <KalGridColumn TItem="CustomerInvoice"
                                                Title="Status"
                                                Property="@(invoice => invoice.Status)"
-                                               Alignment="KalDataGridAlignment.End">
+                                               Alignment="KalDataGridAlignment.End"
+                                               Tooltip="@InvoiceStatusColumnTooltip"
+                                               CellTooltip="GetInvoiceStatusTooltip">
                                     <CellTemplate Context="invoice">
                                         <span class="@GetInvoiceStatusClass(invoice.Status)">@invoice.Status</span>
                                     </CellTemplate>
@@ -274,6 +384,68 @@
                 </KalDataGrid>
             </div>
         </section>;
+
+    private const string BrandTooltipClass = "max-w-md rounded-xl border border-white/25 bg-gradient-to-br from-red-900 to-amber-700 px-3 py-2 text-sm font-bold leading-5 text-white shadow-2xl";
+    private const string IceTooltipClass = "max-w-md rounded-xl border border-sky-300 bg-sky-100/95 px-3 py-2 text-sm font-semibold leading-5 text-sky-950 shadow-xl backdrop-blur-sm";
+    private const string PanelTooltipClass = "max-w-md rounded-2xl border border-slate-600 bg-slate-950/95 px-4 py-3 text-sm font-medium leading-5 text-slate-50 shadow-2xl";
+    private const string SuccessTooltipClass = "max-w-md rounded-xl border border-emerald-300 bg-emerald-900/95 px-3 py-2 text-sm font-semibold leading-5 text-emerald-50 shadow-xl";
+    private const string OutlineTooltipClass = "max-w-md rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold leading-5 text-slate-950 shadow-xl";
+    private const string DrawerOpenTooltip = "KalDrawerTrigger\nOpens the home page tooltip drawer.";
+    private const string FooterTooltip = "KalFooterContent\nContent regions can surface additional context on hover.";
+    private const string IconTooltip = "KalIcon\nSVG icons can opt into the shared tooltip API too.";
+    private const string CustomerColumnTooltip = "Kunde\nName und Segment";
+    private const string StatusColumnTooltip = "Status";
+    private const string PlanColumnTooltip = "Plan";
+    private const string MrrColumnTooltip = "MRR";
+    private const string SeatsColumnTooltip = "Seats";
+    private const string TicketsColumnTooltip = "Tickets";
+    private const string OwnerColumnTooltip = "Owner";
+    private const string RegionColumnTooltip = "Region";
+    private const string ArrColumnTooltip = "ARR";
+    private const string ChurnRiskColumnTooltip = "Churn Risk";
+    private const string InvoiceNumberColumnTooltip = "Rechnung";
+    private const string InvoicePeriodColumnTooltip = "Zeitraum";
+    private const string InvoiceAmountColumnTooltip = "Betrag";
+    private const string InvoiceStatusColumnTooltip = "Status";
+    private const string DrawerTooltip = "KalDrawer\nThe home page keeps the drawer tooltip example inline.";
+    private const string DrawerHeaderTooltip = "KalDrawerHeader\nHeader area of the tooltip example drawer.";
+    private const string DrawerContentTooltip = "KalDrawerContent\nTooltips stay visible while the pointer moves inside the component.";
+    private const string DrawerCloseTooltip = "KalDrawerTrigger\nCloses the home page tooltip drawer.";
+    private const string TouchStartTooltip = "Touch demo\nThis plain HTML card opens the shared tooltip on tap.";
+    private const string TouchCenterTooltip = "Touch demo\nTap once to open, then tap outside the card to dismiss.";
+    private const string TouchEndTooltip = "Touch demo\nThis card is aligned to the far side so viewport-edge flipping can be tested on mobile too.";
+
+    private static string GetGridTooltip(string title) => title;
+
+    private static string GetCustomerTooltip(CustomerAccount account) => $"{account.Name}\n{account.Segment}";
+
+    private static string GetStatusTooltip(CustomerAccount account) => account.Status;
+
+    private static string GetPlanTooltip(CustomerAccount account) => account.Plan;
+
+    private static string GetMrrTooltip(CustomerAccount account) => $"{account.MonthlyRecurringRevenue:N0} EUR";
+
+    private static string GetSeatsTooltip(CustomerAccount account) => account.Seats.ToString();
+
+    private static string GetTicketsTooltip(CustomerAccount account) => account.OpenTickets.ToString();
+
+    private static string GetOwnerTooltip(CustomerAccount account) => account.Owner;
+
+    private static string GetRegionTooltip(CustomerAccount account) => account.Region;
+
+    private static string GetArrTooltip(CustomerAccount account) => $"{account.AnnualRecurringRevenue:N0} EUR";
+
+    private static string GetChurnRiskTooltip(CustomerAccount account) => $"{account.ChurnRiskPercent}%";
+
+    private static string GetInvoiceGridTooltip(CustomerAccount account) => account.Name;
+
+    private static string GetInvoiceNumberTooltip(CustomerInvoice invoice) => invoice.Number;
+
+    private static string GetInvoicePeriodTooltip(CustomerInvoice invoice) => invoice.Period;
+
+    private static string GetInvoiceAmountTooltip(CustomerInvoice invoice) => $"{invoice.Amount:N0} EUR";
+
+    private static string GetInvoiceStatusTooltip(CustomerInvoice invoice) => invoice.Status;
 
     private static List<CustomerAccount> CreateAccounts()
     {
@@ -407,3 +579,42 @@
         int Quantity,
         decimal UnitPrice);
 }
+
+<KalDrawer Id="home-tooltip-drawer"
+           InitialState="KalDrawerState.Hidden"
+           Width="DrawerWidth.Md"
+           Tooltip="@DrawerTooltip"
+           TooltipClass="@PanelTooltipClass">
+    <ChildContent Context="drawer">
+        <KalDrawerHeader Tooltip="@DrawerHeaderTooltip"
+                         TooltipClass="@BrandTooltipClass">
+            <div class="flex items-center justify-between gap-3">
+                <span class="font-medium text-slate-900">Tooltip example drawer</span>
+                <KalDrawerTrigger TargetId="home-tooltip-drawer"
+                                  Action="KalDrawerTriggerAction.Close"
+                                  AdditionalClass="rounded p-2 hover:bg-slate-100"
+                                  Tooltip="@DrawerCloseTooltip"
+                                  TooltipClass="@OutlineTooltipClass">
+                    <KalIcon Icon="@Icons.X" />
+                </KalDrawerTrigger>
+            </div>
+        </KalDrawerHeader>
+
+        <KalDrawerContent Tooltip="@DrawerContentTooltip"
+                          TooltipClass="@PanelTooltipClass">
+            <div class="space-y-3 text-sm text-slate-700">
+                <p>
+                    This drawer keeps one interactive tooltip example on the home page without needing a dedicated tooltip route.
+                </p>
+                <KalDrawerTrigger TargetId="home-tooltip-drawer"
+                                  Action="KalDrawerTriggerAction.Close"
+                                  Tooltip="@DrawerCloseTooltip"
+                                  TooltipClass="@SuccessTooltipClass">
+                    <span class="inline-flex rounded-md bg-slate-900 px-3 py-2 font-medium text-white hover:bg-slate-700">
+                        Drawer schließen
+                    </span>
+                </KalDrawerTrigger>
+            </div>
+        </KalDrawerContent>
+    </ChildContent>
+</KalDrawer>
