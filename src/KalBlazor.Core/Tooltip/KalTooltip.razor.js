@@ -47,6 +47,22 @@ function positionTooltipElement(element, clientX, clientY, offsetX, offsetY) {
     element.style.visibility = "visible";
 }
 
+function getPrimaryTouch(event) {
+    if (event.touches.length > 0) {
+        return event.touches[0];
+    }
+
+    if (event.changedTouches.length > 0) {
+        return event.changedTouches[0];
+    }
+
+    return null;
+}
+
+function hasRecentTouchInteraction(state) {
+    return Date.now() - state.lastTouchTimestamp < 750;
+}
+
 function getTooltipTrigger(target) {
     if (!(target instanceof Element)) {
         return null;
@@ -103,6 +119,7 @@ export function initializeKalTooltips(dotNetRef) {
         pendingClientX: 0,
         pendingClientY: 0,
         animationFrameId: 0,
+        lastTouchTimestamp: 0,
         tooltipElement: null,
         offsetX: 0,
         offsetY: 0,
@@ -134,6 +151,10 @@ export function initializeKalTooltips(dotNetRef) {
     };
 
     const mouseOverHandler = event => {
+        if (hasRecentTouchInteraction(state)) {
+            return;
+        }
+
         const trigger = getTooltipTrigger(event.target);
 
         if (trigger === null) {
@@ -150,6 +171,10 @@ export function initializeKalTooltips(dotNetRef) {
     };
 
     const mouseMoveHandler = event => {
+        if (hasRecentTouchInteraction(state)) {
+            return;
+        }
+
         if (state.activeTrigger === null) {
             return;
         }
@@ -158,6 +183,10 @@ export function initializeKalTooltips(dotNetRef) {
     };
 
     const mouseOutHandler = event => {
+        if (hasRecentTouchInteraction(state)) {
+            return;
+        }
+
         if (state.activeTrigger === null) {
             return;
         }
@@ -171,6 +200,27 @@ export function initializeKalTooltips(dotNetRef) {
         hideTooltip();
     };
 
+    const touchStartHandler = event => {
+        const trigger = getTooltipTrigger(event.target);
+        const touch = getPrimaryTouch(event);
+
+        state.lastTouchTimestamp = Date.now();
+
+        if (trigger === null || touch === null) {
+            hideTooltip();
+            return;
+        }
+
+        if (state.activeTrigger === trigger) {
+            hideTooltip();
+            return;
+        }
+
+        showTooltip(trigger, touch);
+    };
+
+    const scrollHandler = () => hideTooltip();
+    const resizeHandler = () => hideTooltip();
     const blurHandler = () => hideTooltip();
     const visibilityChangeHandler = () => {
         if (document.visibilityState !== "visible") {
@@ -182,6 +232,9 @@ export function initializeKalTooltips(dotNetRef) {
         mouseOverHandler,
         mouseMoveHandler,
         mouseOutHandler,
+        touchStartHandler,
+        scrollHandler,
+        resizeHandler,
         blurHandler,
         visibilityChangeHandler
     };
@@ -189,6 +242,9 @@ export function initializeKalTooltips(dotNetRef) {
     document.addEventListener("mouseover", mouseOverHandler, true);
     document.addEventListener("mousemove", mouseMoveHandler, true);
     document.addEventListener("mouseout", mouseOutHandler, true);
+    document.addEventListener("touchstart", touchStartHandler, true);
+    window.addEventListener("scroll", scrollHandler, true);
+    window.addEventListener("resize", resizeHandler);
     window.addEventListener("blur", blurHandler);
     document.addEventListener("visibilitychange", visibilityChangeHandler);
 }
@@ -206,6 +262,9 @@ export function disposeKalTooltips() {
     document.removeEventListener("mouseover", state.handlers.mouseOverHandler, true);
     document.removeEventListener("mousemove", state.handlers.mouseMoveHandler, true);
     document.removeEventListener("mouseout", state.handlers.mouseOutHandler, true);
+    document.removeEventListener("touchstart", state.handlers.touchStartHandler, true);
+    window.removeEventListener("scroll", state.handlers.scrollHandler, true);
+    window.removeEventListener("resize", state.handlers.resizeHandler);
     window.removeEventListener("blur", state.handlers.blurHandler);
     document.removeEventListener("visibilitychange", state.handlers.visibilityChangeHandler);
     delete window.__kalTooltipState;

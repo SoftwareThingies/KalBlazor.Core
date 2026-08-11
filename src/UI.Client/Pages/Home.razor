@@ -45,6 +45,33 @@
                 The app bar covers navigation examples; the home page covers content and grid examples.
             </div>
         </div>
+
+        <div class="mt-6 rounded-xl border border-sky-200 bg-sky-50 p-5">
+            <div class="max-w-3xl">
+                <h3 class="text-base font-semibold text-sky-950">Touch tooltip demo</h3>
+                <p class="mt-2 text-sm text-sky-900">
+                    On phones and tablets, tap the cards below to open their tooltip. Tap the same card again or tap elsewhere to close it.
+                </p>
+            </div>
+
+            <div class="mt-4 grid gap-3 sm:grid-cols-3">
+                <div class="rounded-xl border border-sky-300 bg-white p-4 text-sm font-medium text-sky-950 shadow-sm"
+                     data-kal-tooltip="@TouchStartTooltip"
+                     data-kal-tooltip-class="@IceTooltipClass">
+                    Tap target 1
+                </div>
+                <div class="rounded-xl border border-sky-300 bg-white p-4 text-sm font-medium text-sky-950 shadow-sm sm:text-center"
+                     data-kal-tooltip="@TouchCenterTooltip"
+                     data-kal-tooltip-class="@OutlineTooltipClass">
+                    Tap target 2
+                </div>
+                <div class="rounded-xl border border-sky-300 bg-white p-4 text-sm font-medium text-sky-950 shadow-sm sm:text-right"
+                     data-kal-tooltip="@TouchEndTooltip"
+                     data-kal-tooltip-class="@SuccessTooltipClass">
+                    Tap target 3
+                </div>
+            </div>
+        </div>
     </section>
 
     <div class="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-slate-700">
@@ -384,6 +411,9 @@
     private const string DrawerHeaderTooltip = "KalDrawerHeader\nHeader area of the tooltip example drawer.";
     private const string DrawerContentTooltip = "KalDrawerContent\nTooltips stay visible while the pointer moves inside the component.";
     private const string DrawerCloseTooltip = "KalDrawerTrigger\nCloses the home page tooltip drawer.";
+    private const string TouchStartTooltip = "Touch demo\nThis plain HTML card opens the shared tooltip on tap.";
+    private const string TouchCenterTooltip = "Touch demo\nTap once to open, then tap outside the card to dismiss.";
+    private const string TouchEndTooltip = "Touch demo\nThis card is aligned to the far side so viewport-edge flipping can be tested on mobile too.";
 
     private static string GetGridTooltip(string title) => title;
 
