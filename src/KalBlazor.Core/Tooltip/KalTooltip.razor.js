@@ -1,4 +1,4 @@
-function getTooltipState() {
+﻿function getTooltipState() {
     return window.__kalTooltipState;
 }
 

@@ -41,8 +41,7 @@
         if (firstRender)
         {
             _module = await JsRuntime.InvokeAsync<IJSObjectReference>(
-                "import",
-                "./_content/SoftwareThingies.KalBlazor.Core/kalTooltip.js");
+                "import", "./_content/SoftwareThingies.KalBlazor.Core/Tooltip/KalTooltip.razor.js");
 
             _dotNetReference = DotNetObjectReference.Create(this);
             await _module.InvokeVoidAsync("initializeKalTooltips", _dotNetReference);
