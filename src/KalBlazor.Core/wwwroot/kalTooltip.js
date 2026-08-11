@@ -10,6 +10,43 @@ function invokeHost(state, methodName, ...args) {
     state.dotNetRef.invokeMethodAsync(methodName, ...args);
 }
 
+function getViewportSize() {
+    const documentElement = document.documentElement;
+
+    return {
+        width: documentElement.clientWidth,
+        height: window.innerHeight || documentElement.clientHeight
+    };
+}
+
+function positionTooltipElement(element, clientX, clientY, offsetX, offsetY) {
+    if (!(element instanceof HTMLElement) || !element.isConnected) {
+        return;
+    }
+
+    const viewportPadding = 8;
+    const rect = element.getBoundingClientRect();
+    const viewport = getViewportSize();
+    const preferredLeft = clientX + offsetX;
+    const preferredTop = clientY + offsetY;
+    const fallbackLeft = clientX - offsetX - rect.width;
+    const fallbackTop = clientY - offsetY - rect.height;
+    const maxLeft = Math.max(viewportPadding, viewport.width - rect.width - viewportPadding);
+    const maxTop = Math.max(viewportPadding, viewport.height - rect.height - viewportPadding);
+
+    const left = preferredLeft + rect.width > viewport.width - viewportPadding
+        ? Math.max(viewportPadding, Math.min(fallbackLeft, maxLeft))
+        : Math.max(viewportPadding, Math.min(preferredLeft, maxLeft));
+
+    const top = preferredTop + rect.height > viewport.height - viewportPadding
+        ? Math.max(viewportPadding, Math.min(fallbackTop, maxTop))
+        : Math.max(viewportPadding, Math.min(preferredTop, maxTop));
+
+    element.style.left = `${left}px`;
+    element.style.top = `${top}px`;
+    element.style.visibility = "visible";
+}
+
 function getTooltipTrigger(target) {
     if (!(target instanceof Element)) {
         return null;
@@ -23,18 +60,23 @@ function setPendingMove(state, clientX, clientY) {
     state.pendingClientX = clientX;
     state.pendingClientY = clientY;
 
-    if (state.animationFrameId !== 0 || state.dotNetRef === null || state.activeTrigger === null) {
+    if (state.animationFrameId !== 0 || state.activeTrigger === null) {
         return;
     }
 
     state.animationFrameId = window.requestAnimationFrame(() => {
         state.animationFrameId = 0;
 
-        if (state.dotNetRef === null || state.activeTrigger === null) {
+        if (state.activeTrigger === null) {
             return;
         }
 
-        invokeHost(state, "UpdateTooltipPosition", state.pendingClientX, state.pendingClientY);
+        positionTooltipElement(
+            state.tooltipElement,
+            state.pendingClientX,
+            state.pendingClientY,
+            state.offsetX,
+            state.offsetY);
     });
 }
 
@@ -61,6 +103,9 @@ export function initializeKalTooltips(dotNetRef) {
         pendingClientX: 0,
         pendingClientY: 0,
         animationFrameId: 0,
+        tooltipElement: null,
+        offsetX: 0,
+        offsetY: 0,
         handlers: null
     };
 
@@ -68,6 +113,7 @@ export function initializeKalTooltips(dotNetRef) {
 
     const hideTooltip = () => {
         state.activeTrigger = null;
+        state.tooltipElement = null;
         clearPendingMove(state);
         invokeHost(state, "HideTooltip");
     };
@@ -163,4 +209,35 @@ export function disposeKalTooltips() {
     window.removeEventListener("blur", state.handlers.blurHandler);
     document.removeEventListener("visibilitychange", state.handlers.visibilityChangeHandler);
     delete window.__kalTooltipState;
+}
+
+export function setKalTooltipElement(tooltipElement, clientX, clientY, offsetX, offsetY) {
+    const state = getTooltipState();
+
+    if (!state) {
+        return;
+    }
+
+    state.tooltipElement = tooltipElement;
+    state.offsetX = offsetX;
+    state.offsetY = offsetY;
+    state.pendingClientX = state.activeTrigger === null ? clientX : state.pendingClientX;
+    state.pendingClientY = state.activeTrigger === null ? clientY : state.pendingClientY;
+
+    positionTooltipElement(
+        state.tooltipElement,
+        state.pendingClientX,
+        state.pendingClientY,
+        state.offsetX,
+        state.offsetY);
+}
+
+export function clearKalTooltipElement() {
+    const state = getTooltipState();
+
+    if (!state) {
+        return;
+    }
+
+    state.tooltipElement = null;
 }
