@@ -9,10 +9,10 @@
             <div class="max-w-3xl">
                 <h2 class="text-lg font-semibold text-slate-950">Tooltip examples</h2>
                 <p class="mt-2 text-sm text-slate-600">
-                    The standalone tooltip page is gone. Tooltip examples now live here on the home page and in the existing app bar above.
+                    Tooltip examples now live directly on the home page and in the existing app bar above.
                 </p>
                 <p class="mt-2 text-sm text-slate-600">
-                    Hover the drawer trigger, icon, footer card, and grid surfaces to see the shared tooltip behavior and custom tooltip styles.
+                    Hover the drawer trigger, KalIcon sample, footer card, and grid surfaces to see the shared tooltip behavior and custom tooltip styles.
                 </p>
             </div>
 
@@ -24,7 +24,7 @@
             </KalDrawerTrigger>
         </div>
 
-        <div class="mt-4 grid gap-4 lg:grid-cols-[1fr_auto]">
+        <div class="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
             <KalFooterContent Class="rounded-lg border border-slate-200 bg-slate-50 p-4 text-left"
                               Tooltip="@FooterTooltip"
                               TooltipClass="@OutlineTooltipClass">
@@ -40,9 +40,25 @@
                 </div>
             </KalFooterContent>
 
-            <div class="rounded-lg border border-dashed border-slate-300 p-4 text-sm text-slate-600"
-                 title="Hover the KalBlazor controls nearby to compare native browser and shared component tooltips.">
-                The app bar covers navigation examples; the home page covers content and grid examples.
+            <div class="rounded-lg border border-dashed border-slate-300 bg-white p-4">
+                <div class="text-sm font-medium text-slate-900">KalIcon demo</div>
+                <p class="mt-2 text-sm text-slate-600">
+                    These icons now render the shared tooltip attributes on their SVG root.
+                </p>
+                <div class="mt-4 flex items-center gap-4 text-slate-700">
+                    <KalIcon Icon="@Icons.CircleInfo"
+                             AdditionalClass="text-2xl text-sky-700"
+                             Tooltip="@InfoIconTooltip"
+                             TooltipClass="@IceTooltipClass" />
+                    <KalIcon Icon="@Icons.Plus"
+                             AdditionalClass="text-2xl text-emerald-700"
+                             Tooltip="@AddIconTooltip"
+                             TooltipClass="@SuccessTooltipClass" />
+                    <KalIcon Icon="@Icons.X"
+                             AdditionalClass="text-2xl text-rose-700"
+                             Tooltip="@CloseIconTooltip"
+                             TooltipClass="@OutlineTooltipClass" />
+                </div>
             </div>
         </div>
 
@@ -393,6 +409,9 @@
     private const string DrawerOpenTooltip = "KalDrawerTrigger\nOpens the home page tooltip drawer.";
     private const string FooterTooltip = "KalFooterContent\nContent regions can surface additional context on hover.";
     private const string IconTooltip = "KalIcon\nSVG icons can opt into the shared tooltip API too.";
+    private const string InfoIconTooltip = "KalIcon\nInformational SVG icon with the shared tooltip styling.";
+    private const string AddIconTooltip = "KalIcon\nAction-style icon tooltip on the main demo page.";
+    private const string CloseIconTooltip = "KalIcon\nClose-style icon tooltip rendered directly from the SVG root.";
     private const string CustomerColumnTooltip = "Kunde\nName und Segment";
     private const string StatusColumnTooltip = "Status";
     private const string PlanColumnTooltip = "Plan";
