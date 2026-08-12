@@ -28,7 +28,7 @@ public partial class KalIcon
     public string PreserveAspectRatio { get; set; } = "xMidYMid meet";
 
     private IReadOnlyDictionary<string, object>? IconAdditionalAttributes =>
-        AdditionalAttributes?
+        BuildFilteredAdditionalAttributes()?
             .Where(attribute => !IsClassOrStyleAttribute(attribute.Key))
             .ToDictionary(StringComparer.OrdinalIgnoreCase);
 

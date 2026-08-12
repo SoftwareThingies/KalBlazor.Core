@@ -2,9 +2,11 @@
 @import "./kal-app-bar.css";
 @import "./kal-app-bar-toggle.css";
 @import "./kal-icon.css";
+@import "./kal-tooltip.css";
 @import "./kal-collapsible.css";
 @import "./kal-drawer.css";
 @import "./kal-content.css";
 @import "./kal-theme-toggle.css";
 @import "./kal-offsets.css";
 @import "./kal-data-grid.css";
+@import "./kal-tooltip.css";
