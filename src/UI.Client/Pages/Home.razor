@@ -2,6 +2,38 @@
 @using SoftwareThingies.KalBlazor.Core.DataGrid
 
 <main class="mx-auto max-w-7xl px-4 py-8">
+    <section class="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h1 class="text-2xl font-semibold text-slate-950">Custom dropdown templates</h1>
+        <p class="mt-2 max-w-3xl text-sm text-slate-600">
+            Dropdowns provide a trigger and fully customizable panel content. The indicator can use the standard arrow, be removed, or be replaced with a custom icon.
+        </p>
+
+        <div class="mt-4 grid gap-6 md:grid-cols-3">
+            <div>
+                <div class="mb-2 text-sm font-medium text-slate-700">Standard arrow</div>
+                <KalDropdown TriggerText="Account actions"
+                             Tooltip="These are all account actions you can perform.">
+                    <ChildContent>@DropdownPanel</ChildContent>
+                </KalDropdown>
+            </div>
+            <div>
+                <div class="mb-2 text-sm font-medium text-slate-700">No arrow</div>
+                <KalDropdown TriggerText="Account actions"
+                             ShowIcon="false">
+                    <ChildContent>@DropdownPanel</ChildContent>
+                </KalDropdown>
+            </div>
+            <div>
+                <div class="mb-2 text-sm font-medium text-slate-700">Custom open/closed icons</div>
+                <KalDropdown TriggerText="Account actions"
+                             OpenIcon="@Icons.X"
+                             ClosedIcon="@Icons.Plus">
+                    <ChildContent>@DropdownPanel</ChildContent>
+                </KalDropdown>
+            </div>
+        </div>
+    </section>
+
     <h1 class="mb-6 text-2xl font-semibold text-slate-950">KalDataGrid typed columns</h1>
 
     <section class="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -131,6 +163,12 @@
 @code {
     private List<CustomerAccount> AccountsWithoutItemKey = CreateAccounts();
     private List<CustomerAccount> AccountsWithItemKey = CreateAccounts();
+    private readonly IReadOnlyList<DropdownOption> DropdownOptions =
+    [
+        new("ACME Industries", "Enterprise account", "bg-emerald-500"),
+        new("Northwind Traders", "Mid-market account", "bg-amber-500"),
+        new("Fabrikam Logistics", "Growth account", "bg-rose-500")
+    ];
     private int reloadCount;
     private int rerenderCount;
 
@@ -149,6 +187,25 @@
     private static object? AccountItemKey(CustomerAccount account) => account.CustomerUrl;
 
     private static object? InvoiceItemKey(CustomerInvoice invoice) => invoice.Number;
+
+    private RenderFragment DropdownPanel => @<div class="rounded-lg border border-slate-200 bg-white p-3 shadow-lg">
+        <div class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Accounts</div>
+        <div class="space-y-1">
+            @foreach (var option in DropdownOptions)
+            {
+                <a href="#"
+                   class="flex items-center justify-between rounded-md px-3 py-2 text-sm hover:bg-slate-50">
+                    <span>
+                        <span class="block font-medium text-slate-900">@option.Name</span>
+                        <span class="block text-xs text-slate-500">@option.Description</span>
+                    </span>
+                    <span class="size-2 shrink-0 rounded-full @option.StatusClass"></span>
+                </a>
+            }
+        </div>
+    </div>;
+
+    private sealed record DropdownOption(string Name, string Description, string StatusClass);
 
     private RenderFragment RenderAccountGrid(string title, string description, IEnumerable<CustomerAccount> items, bool useItemKey) =>
         @<section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
