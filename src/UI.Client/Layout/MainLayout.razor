@@ -122,7 +122,7 @@
                     </KalDrawerTrigger>
                 </div>
 
-                <div class="flex flex-col gap-3 text-slate-700">
+                <div class="flex flex-col gap-3 text-slate-700 p-3">
                     <div class="flex items-center gap-3">
                         <KalIcon Icon="@Icons.AngleDown" AdditionalClass="text-xl border-2"/>
                         <span class="text-xl @(drawer.IsMinimized ? "hidden" : "block")">
@@ -250,8 +250,12 @@
                         <span class="text-xl">Users</span>
                     </div>
                     <div class="flex items-center gap-3">
-                        <KalIcon Icon="@Icons.X" AdditionalClass="text-xs border-4"/>
-                        <span class="text-xs ">X</span>
+                        <KalIcon Icon="@Icons.X" AdditionalClass="text-xl border-4"/>
+                        <span class="text-xl">X</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <KalIcon Icon="@Icons.ZipDocument" AdditionalClass="text-xl border-2" />
+                        <span class="text-xl">Zip Document</span>
                     </div>
                 </div>
             </KalDrawerContent>
