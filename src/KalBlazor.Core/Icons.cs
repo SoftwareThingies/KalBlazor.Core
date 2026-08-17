@@ -35,4 +35,5 @@ public static class Icons
     public const string UserKey = "user-key";
     public const string Users = "users";
     public const string X = "x";
+    public const string ZipDocument = "zip-document";
 }

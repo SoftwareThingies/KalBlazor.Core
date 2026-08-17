@@ -1,0 +1,45 @@
+@namespace SoftwareThingies.KalBlazor.Core
+@inherits BaseComponent
+@implements IAsyncDisposable
+@inject IJSRuntime JsRuntime
+
+<div class="@CssClass"
+     @onfocusout="CloseOnFocusOut">
+    <button type="button"
+            @ref="TriggerElement"
+            class="@TriggerCssClass"
+            @attributes="FilteredAdditionalAttributes"
+            aria-label="@AriaLabel"
+            aria-haspopup="true"
+            aria-expanded="@IsOpen"
+            @onclick="Toggle">
+        <span class="min-w-0 flex-1">
+            @if (TriggerTemplate is not null)
+            {
+                @TriggerTemplate
+            }
+            else
+            {
+                @TriggerText
+            }
+        </span>
+        @if (ShowIcon)
+        {
+            @if (IconTemplate is not null)
+            {
+                @IconTemplate(IsOpen)
+            }
+            else
+            {
+                <KalIcon Icon="@EffectiveIcon" AdditionalClass="@IconClass" />
+            }
+        }
+    </button>
+
+    @if (IsOpen)
+    {
+        <div @ref="PanelElement" class="kal-dropdown-panel @PanelClass">
+            @ChildContent
+        </div>
+    }
+</div>
