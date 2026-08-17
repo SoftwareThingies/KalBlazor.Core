@@ -3,31 +3,47 @@
 
 <main class="mx-auto max-w-7xl px-4 py-8">
     <section class="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h1 class="text-2xl font-semibold text-slate-950">Custom dropdown templates</h1>
+        <h1 class="text-2xl font-semibold text-slate-950">Dropdown styling demos</h1>
         <p class="mt-2 max-w-3xl text-sm text-slate-600">
-            Dropdowns provide a trigger and fully customizable panel content. The indicator can use the standard arrow, be removed, or be replaced with a custom icon.
+            The root, panel, trigger, and indicator can all be styled or replaced while the panel remains fully custom.
         </p>
 
         <div class="mt-4 grid gap-6 md:grid-cols-3">
             <div>
-                <div class="mb-2 text-sm font-medium text-slate-700">Standard arrow</div>
+                <div class="mb-2 text-sm font-medium text-slate-700">Panel and icon classes</div>
                 <KalDropdown TriggerText="Account actions"
-                             Tooltip="These are all account actions you can perform.">
+                             AdditionalClass="rounded-lg bg-slate-50 px-3 py-2"
+                             PanelClass="absolute left-0 z-50 mt-3 w-72 rounded-xl border border-slate-700 bg-white p-2 text-slate-900 shadow-2xl"
+                             IconClass="size-5 text-amber-500">
                     <ChildContent>@DropdownPanel</ChildContent>
                 </KalDropdown>
             </div>
             <div>
-                <div class="mb-2 text-sm font-medium text-slate-700">No arrow</div>
+                <div class="mb-2 text-sm font-medium text-slate-700">No indicator</div>
                 <KalDropdown TriggerText="Account actions"
-                             ShowIcon="false">
-                    <ChildContent>@DropdownPanel</ChildContent>
+                             ShowIcon="false"
+                             AdditionalClass="rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-sky-900"
+                             PanelClass="absolute left-0 z-50 mt-2 w-64 rounded-md border border-sky-200 bg-white p-1 shadow-lg">
+                    <ChildContent>
+                        <div class="space-y-1 text-sm">
+                            <a href="#" class="block rounded px-3 py-2 hover:bg-sky-50">View profile</a>
+                            <a href="#" class="block rounded px-3 py-2 hover:bg-sky-50">Manage access</a>
+                        </div>
+                    </ChildContent>
                 </KalDropdown>
             </div>
             <div>
-                <div class="mb-2 text-sm font-medium text-slate-700">Custom open/closed icons</div>
-                <KalDropdown TriggerText="Account actions"
+                <div class="mb-2 text-sm font-medium text-slate-700">Custom trigger and icons</div>
+                <KalDropdown AdditionalClass="rounded-xl bg-amber-100 px-4 py-3 text-amber-950"
+                             PanelClass="absolute right-0 z-50 mt-2 w-72 rounded-xl border border-amber-200 bg-white p-3 shadow-xl"
                              OpenIcon="@Icons.X"
                              ClosedIcon="@Icons.Plus">
+                    <TriggerTemplate>
+                        <span class="flex items-center gap-2 font-semibold">
+                            <KalIcon Icon="@Icons.Settings" AdditionalClass="size-4" />
+                            Settings
+                        </span>
+                    </TriggerTemplate>
                     <ChildContent>@DropdownPanel</ChildContent>
                 </KalDropdown>
             </div>
