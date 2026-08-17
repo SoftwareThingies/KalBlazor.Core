@@ -1,9 +1,12 @@
 @namespace SoftwareThingies.KalBlazor.Core
 @inherits BaseComponent
+@implements IAsyncDisposable
+@inject IJSRuntime JsRuntime
 
 <div class="@CssClass"
      @onfocusout="CloseOnFocusOut">
     <button type="button"
+            @ref="TriggerElement"
             class="@TriggerCssClass"
             @attributes="FilteredAdditionalAttributes"
             aria-label="@AriaLabel"
@@ -35,7 +38,7 @@
 
     @if (IsOpen)
     {
-        <div class="@PanelClass">
+        <div @ref="PanelElement" class="kal-dropdown-panel @PanelClass">
             @ChildContent
         </div>
     }

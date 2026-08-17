@@ -1,15 +1,23 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
 
 namespace SoftwareThingies.KalBlazor.Core;
 
 public partial class KalDropdown
 {
+    private IJSObjectReference? _module;
+    private bool _wasOpen;
+
     protected override string ComponentClass => "kal-dropdown";
 
     protected override string DefaultClass => "relative inline-block text-left";
 
     private bool IsOpen { get; set; }
+
+    private ElementReference TriggerElement { get; set; }
+
+    private ElementReference PanelElement { get; set; }
 
     [Parameter]
     public RenderFragment? TriggerTemplate { get; set; }
@@ -62,4 +70,37 @@ public partial class KalDropdown
     private void Toggle() => IsOpen = !IsOpen;
 
     private void CloseOnFocusOut(FocusEventArgs args) => IsOpen = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (IsOpen)
+        {
+            _module ??= await JsRuntime.InvokeAsync<IJSObjectReference>(
+                "import",
+                "./_content/SoftwareThingies.KalBlazor.Core/Dropdown/KalDropdown.razor.js");
+
+            await _module.InvokeVoidAsync("positionKalDropdownPanel", PanelElement, TriggerElement);
+            _wasOpen = true;
+        }
+        else if (_wasOpen && _module is not null)
+        {
+            await _module.InvokeVoidAsync("disposeKalDropdownPanel", PanelElement);
+            _wasOpen = false;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_module is not null)
+        {
+            try
+            {
+                await _module.InvokeVoidAsync("disposeKalDropdownPanel", PanelElement);
+                await _module.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+            }
+        }
+    }
 }
