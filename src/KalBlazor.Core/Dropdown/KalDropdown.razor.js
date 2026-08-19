@@ -97,3 +97,8 @@ export function disposeKalDropdownPanel(panel) {
     window.removeEventListener("scroll", state.update, true);
     delete panel.__kalDropdownState;
 }
+
+export function containsFocusedElement(element) {
+    return element instanceof HTMLElement
+        && element.contains(document.activeElement);
+}

@@ -19,6 +19,8 @@ public partial class KalDropdown
 
     private ElementReference PanelElement { get; set; }
 
+    private ElementReference RootElement { get; set; }
+
     [Parameter]
     public RenderFragment? TriggerTemplate { get; set; }
 
@@ -69,7 +71,18 @@ public partial class KalDropdown
 
     private void Toggle() => IsOpen = !IsOpen;
 
-    private void CloseOnFocusOut(FocusEventArgs args) => IsOpen = false;
+    private async Task CloseOnFocusOut(FocusEventArgs args)
+    {
+        // focusout bubbles from descendants. Keep the panel open when focus moves
+        // from the trigger into panel content (for example, to a button).
+        if (_module is not null
+            && await _module.InvokeAsync<bool>("containsFocusedElement", RootElement))
+        {
+            return;
+        }
+
+        IsOpen = false;
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
