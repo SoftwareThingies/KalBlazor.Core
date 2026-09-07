@@ -102,3 +102,7 @@ export function containsFocusedElement(element) {
     return element instanceof HTMLElement
         && element.contains(document.activeElement);
 }
+
+export function waitForFocusChange() {
+    return new Promise(resolve => window.requestAnimationFrame(resolve));
+}

@@ -13,7 +13,7 @@
             aria-label="@AriaLabel"
             aria-haspopup="true"
             aria-expanded="@IsOpen"
-            @onclick="Toggle">
+            @onclick="HandleTriggerClick">
         <span class="min-w-0 flex-1">
             @if (TriggerTemplate is not null)
             {
@@ -39,7 +39,9 @@
 
     @if (IsOpen)
     {
-        <div @ref="PanelElement" class="kal-dropdown-panel @PanelClass">
+        <div @ref="PanelElement"
+             class="kal-dropdown-panel @PanelClass"
+             @onclick="CloseAfterPanelClick">
             @ChildContent
         </div>
     }
