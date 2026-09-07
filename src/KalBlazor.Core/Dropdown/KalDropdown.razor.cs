@@ -57,6 +57,13 @@ public partial class KalDropdown
     [Parameter]
     public RenderFragment<bool>? IconTemplate { get; set; }
 
+    /// <summary>
+    /// Runs when the dropdown trigger is clicked. The open state is changed only
+    /// after this callback has completed.
+    /// </summary>
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnClick { get; set; }
+
     [Parameter]
     public string PanelClass { get; set; } = "absolute left-0 z-50 mt-2 min-w-full";
 
@@ -69,16 +76,32 @@ public partial class KalDropdown
             ? OpenIcon ?? Icons.AngleUp
             : ClosedIcon ?? Icons.AngleDown);
 
-    private void Toggle() => IsOpen = !IsOpen;
+    private async Task HandleTriggerClick(MouseEventArgs args)
+    {
+        await OnClick.InvokeAsync(args);
+        IsOpen = !IsOpen;
+    }
+
+    private void CloseAfterPanelClick()
+    {
+        // This handler runs after handlers on clicked descendants have run.
+        // Keeping the close here prevents focusout from removing the clicked
+        // element before its native/Blazor click is delivered.
+        IsOpen = false;
+    }
 
     private async Task CloseOnFocusOut(FocusEventArgs args)
     {
-        // focusout bubbles from descendants. Keep the panel open when focus moves
-        // from the trigger into panel content (for example, to a button).
-        if (_module is not null
-            && await _module.InvokeAsync<bool>("containsFocusedElement", RootElement))
+        // focusout happens before click. Wait until the browser has completed the
+        // focus change so a click into the panel cannot remove its target first.
+        if (_module is not null)
         {
-            return;
+            await _module.InvokeVoidAsync("waitForFocusChange");
+
+            if (await _module.InvokeAsync<bool>("containsFocusedElement", RootElement))
+            {
+                return;
+            }
         }
 
         IsOpen = false;

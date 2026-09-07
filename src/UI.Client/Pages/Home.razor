@@ -91,17 +91,17 @@
                     <div class="text-xs text-slate-700">
                         <div class="pb-1 font-semibold uppercase tracking-wide text-slate-400">PDF-Downloads</div>
                         <div class="text-nowrap py-1">
-                            <a href="#" class="flex items-center gap-2 rounded px-2 py-1.5 hover:bg-slate-50">
+                            <a href="@PdfDownloadUrl" download="abrechnungsdetails.pdf" class="flex items-center gap-2 rounded px-2 py-1.5 hover:bg-slate-50">
                                 <KalIcon Icon="@Icons.PdfDocument" AdditionalClass="text-xl shrink-0 text-rose-500" />
                                 <span class="min-w-0 flex-1 whitespace-nowrap">Abrechnungsdetails</span>
                                 <span class="text-[0.65rem] text-slate-400">.pdf</span>
                             </a>
-                            <a href="#" class="flex items-center gap-2 rounded px-2 py-1.5 hover:bg-slate-50">
+                            <a href="@PdfDownloadUrl" download="kontierungsblatt.pdf" class="flex items-center gap-2 rounded px-2 py-1.5 hover:bg-slate-50">
                                 <KalIcon Icon="@Icons.PdfDocument" AdditionalClass="text-xl shrink-0 text-rose-500" />
                                 <span class="min-w-0 flex-1 whitespace-nowrap">Kontierungsblatt</span>
                                 <span class="text-[0.65rem] text-slate-400">.pdf</span>
                             </a>
-                            <a href="#" class="flex items-start gap-2 rounded px-2 py-1.5 hover:bg-slate-50">
+                            <a href="@PdfDownloadUrl" download="abrechnungsdetails-leistungsnachweise.pdf" class="flex items-start gap-2 rounded px-2 py-1.5 hover:bg-slate-50">
                                 <KalIcon Icon="@Icons.PdfDocument" AdditionalClass="text-xl shrink-0 text-rose-500" />
                                 <span class="min-w-0 flex-1">
                                     <span class="block whitespace-nowrap font-semibold text-slate-800">Abrechnungsdetails + Leistungsnachweise</span>
@@ -109,7 +109,7 @@
                                 </span>
                                 <span class="text-[0.65rem] text-slate-400">.pdf</span>
                             </a>
-                            <a href="#" class="flex items-start gap-2 rounded bg-slate-50 px-2 py-1.5 hover:bg-slate-100">
+                            <a href="@PdfDownloadUrl" download="abrechnungsdetails-kontierungsblatt-leistungsnachweise.pdf" class="flex items-start gap-2 rounded bg-slate-50 px-2 py-1.5 hover:bg-slate-100">
                                 <KalIcon Icon="@Icons.PdfDocument" AdditionalClass="text-xl shrink-0 text-rose-500" />
                                 <span class="min-w-0 flex-1">
                                     <span class="block whitespace-nowrap font-semibold text-slate-800">Abrechnungsdetails + Kontierungsblatt + LN</span>
@@ -121,15 +121,15 @@
 
                         <div class="mt-1 border-t border-slate-200 pt-1 font-semibold uppercase tracking-wide text-slate-400">Excel-Downloads</div>
                         <div class="text-nowrap py-1">
-                            <a href="#" class="flex items-center gap-2 rounded px-2 py-1.5 hover:bg-slate-50">
+                            <a href="@ExcelDownloadUrl" download="abrechnungsdetails.xls" class="flex items-center gap-2 rounded px-2 py-1.5 hover:bg-slate-50">
                                 <KalIcon Icon="@Icons.ExcelDocument" AdditionalClass="text-xl shrink-0 text-emerald-600" />
                                 <span class="min-w-0 flex-1 whitespace-nowrap">Abrechnungsdetails</span>
-                                <span class="text-[0.65rem] text-slate-400">.xlsx</span>
+                                <span class="text-[0.65rem] text-slate-400">.xls</span>
                             </a>
-                            <a href="#" class="flex items-center gap-2 rounded px-2 py-1.5 hover:bg-slate-50">
+                            <a href="@ExcelDownloadUrl" download="kontierungsblatt.xls" class="flex items-center gap-2 rounded px-2 py-1.5 hover:bg-slate-50">
                                 <KalIcon Icon="@Icons.ExcelDocument" AdditionalClass="text-xl shrink-0 text-emerald-600" />
                                 <span class="min-w-0 flex-1 whitespace-nowrap">Kontierungsblatt</span>
-                                <span class="text-[0.65rem] text-slate-400">.xlsx</span>
+                                <span class="text-[0.65rem] text-slate-400">.xls</span>
                             </a>
                         </div>
                     </div>
@@ -275,6 +275,14 @@
     ];
     private int reloadCount;
     private int rerenderCount;
+
+    private static string PdfDownloadUrl =>
+        "data:application/pdf;base64," + Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(
+            "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Count 0/Kids[]>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF"));
+
+    private static string ExcelDownloadUrl =>
+        "data:application/vnd.ms-excel;base64," + Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(
+            "<?xml version=\"1.0\"?><Workbook xmlns=\"urn:schemas-microsoft-com:office:spreadsheet\" xmlns:ss=\"urn:schemas-microsoft-com:office:spreadsheet\"><Worksheet ss:Name=\"Abrechnung\"><Table><Row><Cell><Data ss:Type=\"String\">Abrechnungsdetails</Data></Cell></Row><Row><Cell><Data ss:Type=\"String\">Download aus dem KalDropdown</Data></Cell></Row></Table></Worksheet></Workbook>"));
 
     private void RecreateAccounts()
     {
