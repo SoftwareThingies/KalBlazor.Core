@@ -16,6 +16,7 @@ public static class Icons
     public const string Clapperboard = "clapperboard";
     public const string Document = "document";
     public const string ExcelDocument = "excel-document";
+    public const string ExcelBasic = "excel-basic";
     public const string ExclamationCircle = "exclamation-circle";
     public const string FileArrowUp = "file-arrow-up";
     public const string FileInvoiceEuro = "file-invoice-euro";
@@ -25,8 +26,10 @@ public static class Icons
     public const string Minus = "minus";
     public const string Pencil = "pencil";
     public const string PdfDocument = "pdf-document";
+    public const string PdfBasic = "pdf-basic";
     public const string Plus = "plus";
     public const string Printer = "printer";
+    public const string QuestionCircle = "question-circle";
     public const string Search = "search";
     public const string Settings = "settings";
     public const string TableCells = "table-cells";
@@ -36,4 +39,5 @@ public static class Icons
     public const string Users = "users";
     public const string X = "x";
     public const string ZipDocument = "zip-document";
+    public const string ZipBasic = "zip-basic";
 }

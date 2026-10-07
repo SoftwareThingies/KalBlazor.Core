@@ -1,0 +1,10 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg">
+    <symbol id="question-circle" viewBox="0 0 24 24">
+        <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+              d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20" />
+        <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+              d="M9 9a3 3 0 1 1 5.1 2.1C13.1 12 12 12.5 12 14" />
+        <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+              d="M12 17h.01" />
+    </symbol>
+</svg>
