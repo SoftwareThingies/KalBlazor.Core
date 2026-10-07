@@ -11,10 +11,12 @@ public static class Icons
     public const string ArrowRight = "arrow-right";
     public const string ArrowUp = "arrow-up";
     public const string Bars = "bars";
+    public const string Camera = "camera";
     public const string Check = "check";
     public const string CircleInfo = "circle-info";
     public const string Clapperboard = "clapperboard";
     public const string Document = "document";
+    public const string Eye = "eye";
     public const string ExcelDocument = "excel-document";
     public const string ExcelBasic = "excel-basic";
     public const string ExclamationCircle = "exclamation-circle";
@@ -37,6 +39,7 @@ public static class Icons
     public const string TriangleExclamation = "triangle-exclamation";
     public const string UserKey = "user-key";
     public const string Users = "users";
+    public const string VideoCamera = "video-camera";
     public const string X = "x";
     public const string ZipDocument = "zip-document";
     public const string ZipBasic = "zip-basic";

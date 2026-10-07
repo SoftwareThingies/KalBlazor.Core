@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <symbol id="video-camera" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M3 7h11a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z" />
+    <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="m16 11 6-3v8l-6-3Z" />
+  </symbol>
+</svg>
