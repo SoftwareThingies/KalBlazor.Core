@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <symbol id="microphone" viewBox="0 0 24 24">
+    <g transform="translate(12 12) scale(1.15) translate(-12 -12)">
+      <g transform="rotate(-45 12 11)">
+        <rect x="4" y="8.5" width="16" height="5" rx="2.5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" />
+        <path fill="none" stroke="currentColor" stroke-linecap="round" d="M16 8.5v5" />
+        <path fill="none" stroke="currentColor" stroke-linecap="round" d="M18 9v4" />
+        <path fill="none" stroke="currentColor" stroke-linecap="round" d="M6.5 8.5v5" />
+      </g>
+      <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M11 16v5" />
+      <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M7.5 21h7" />
+    </g>
+  </symbol>
+</svg>

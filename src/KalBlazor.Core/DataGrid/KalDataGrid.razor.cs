@@ -24,6 +24,8 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
 
     private readonly HashSet<object?> _expandedItemKeys = [];
     private readonly HashSet<TItem> _descendantFilterMatches = [];
+    private readonly List<KalGridColumn<TItem>> _sortColumns = [];
+    private readonly Dictionary<KalGridColumn<TItem>, KalDataGridSortDirection> _sortDirections = [];
     private bool _defaultExpansionApplied;
     private bool? _pendingDescendantExpansion;
     private KalDataGridChildRowExpansionContext? _subscribedParentChildRowExpansionContext;
@@ -39,6 +41,8 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
     private KalDataGridChildRowExpansionContext ChildRowExpansionContext { get; } = new();
 
     string? IKalDataGridFilterContext.FilterText => InheritedFilterText;
+
+    bool IKalDataGridFilterContext.HasExactFilterMatch => HasExactFilterMatch;
 
     [CascadingParameter]
     private KalDataGridChildRowExpansionContext? ParentChildRowExpansionContext { get; set; }
@@ -117,6 +121,18 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
 
     [Parameter]
     public string? AdditionalHeaderCellClass { get; set; }
+
+    [Parameter]
+    public string SortIconAscending { get; set; } = Icons.ArrowUp;
+
+    [Parameter]
+    public string SortIconDescending { get; set; } = Icons.ArrowDown;
+
+    [Parameter]
+    public string? SortIconAscendingClass { get; set; }
+
+    [Parameter]
+    public string? SortIconDescendingClass { get; set; }
 
     [Parameter]
     public string? BodyClass { get; set; }
@@ -240,9 +256,15 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
 
     private bool HasActiveFilter => !string.IsNullOrWhiteSpace(InheritedFilterText);
 
+    private bool HasExactFilterMatch => !string.IsNullOrWhiteSpace(InheritedFilterText)
+        && (Items ?? []).Any(item => MatchesFilterTerms(
+            item,
+            GetFilterTerms(InheritedFilterText!),
+            FilterMatchMode.AnyTermExact));
+
     private string? EffectiveFilterText => ParentFilterOverride ? null : InheritedFilterText;
 
-    private IEnumerable<TItem> BoundItems => (Items ?? []).Where(IsItemVisible);
+    private IEnumerable<TItem> BoundItems => ApplySorting((Items ?? []).Where(IsItemVisible));
 
     private string TableCssClass => $"{(string.IsNullOrWhiteSpace(TableClass) ? DefaultTableClass : TableClass)} {AdditionalTableClass}".Trim();
 
@@ -253,6 +275,123 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
     private string GetHeaderCellCssClass(KalGridColumn<TItem> column)
     {
         return $"{AdditionalHeaderCellClass} {column.HeaderCssClass}".Trim();
+    }
+
+    private string? GetHeaderAriaSort(KalGridColumn<TItem> column)
+    {
+        return _sortDirections.TryGetValue(column, out var direction)
+            ? direction == KalDataGridSortDirection.Descending ? "descending" : "ascending"
+            : column.IsSortable ? "none" : null;
+    }
+
+    private string? GetSortIcon(KalGridColumn<TItem> column)
+    {
+        if (!_sortDirections.TryGetValue(column, out var direction))
+        {
+            return null;
+        }
+
+        return direction == KalDataGridSortDirection.Descending
+            ? column.SortIconDescending ?? SortIconDescending
+            : column.SortIconAscending ?? SortIconAscending;
+    }
+
+    private string? GetSortIconClass(KalGridColumn<TItem> column)
+    {
+        if (!_sortDirections.TryGetValue(column, out var direction))
+        {
+            return null;
+        }
+
+        return direction == KalDataGridSortDirection.Descending
+            ? column.SortIconDescendingClass ?? SortIconDescendingClass
+            : column.SortIconAscendingClass ?? SortIconAscendingClass;
+    }
+
+    private string GetSortButtonAriaLabel(KalGridColumn<TItem> column)
+    {
+        if (!_sortDirections.TryGetValue(column, out var direction))
+        {
+            return $"Nach {column.HeaderText} absteigend sortieren";
+        }
+
+        return direction == KalDataGridSortDirection.Descending
+            ? $"Nach {column.HeaderText} aufsteigend sortieren"
+            : $"Sortierung nach {column.HeaderText} entfernen";
+    }
+
+    private Task ToggleSortAsync(KalGridColumn<TItem> column)
+    {
+        if (!_sortDirections.TryGetValue(column, out var direction))
+        {
+            _sortDirections[column] = KalDataGridSortDirection.Descending;
+            _sortColumns.Add(column);
+        }
+        else if (direction == KalDataGridSortDirection.Descending)
+        {
+            _sortDirections[column] = KalDataGridSortDirection.Ascending;
+        }
+        else
+        {
+            _sortDirections.Remove(column);
+            _sortColumns.Remove(column);
+        }
+
+        return InvokeAsync(StateHasChanged);
+    }
+
+    private IEnumerable<TItem> ApplySorting(IEnumerable<TItem> items)
+    {
+        IOrderedEnumerable<TItem>? orderedItems = null;
+
+        foreach (var column in _sortColumns)
+        {
+            var direction = _sortDirections[column];
+            if (orderedItems is null)
+            {
+                orderedItems = direction == KalDataGridSortDirection.Descending
+                    ? items.OrderByDescending(column.GetSortValue, SortValueComparer.Instance)
+                    : items.OrderBy(column.GetSortValue, SortValueComparer.Instance);
+            }
+            else
+            {
+                orderedItems = direction == KalDataGridSortDirection.Descending
+                    ? orderedItems.ThenByDescending(column.GetSortValue, SortValueComparer.Instance)
+                    : orderedItems.ThenBy(column.GetSortValue, SortValueComparer.Instance);
+            }
+        }
+
+        return orderedItems ?? items;
+    }
+
+    private sealed class SortValueComparer : IComparer<object?>
+    {
+        public static SortValueComparer Instance { get; } = new();
+
+        public int Compare(object? x, object? y)
+        {
+            if (ReferenceEquals(x, y))
+            {
+                return 0;
+            }
+
+            if (x is null)
+            {
+                return -1;
+            }
+
+            if (y is null)
+            {
+                return 1;
+            }
+
+            if (x is IComparable comparable)
+            {
+                return comparable.CompareTo(y);
+            }
+
+            return StringComparer.CurrentCulture.Compare(x.ToString(), y.ToString());
+        }
     }
 
     private string BodyCssClass => $"{(string.IsNullOrWhiteSpace(BodyClass) ? DefaultBodyClass : BodyClass)} {AdditionalBodyClass}".Trim();
@@ -279,8 +418,54 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
 
     private bool ItemMatchesFilter(TItem item, string filterText)
     {
-        return GridContext.Columns.Any(column =>
-            column.GetSearchText(item).Contains(filterText, StringComparison.CurrentCultureIgnoreCase));
+        var filterTerms = GetFilterTerms(filterText);
+
+        if (filterTerms.Length == 0)
+        {
+            return false;
+        }
+
+        var matchMode = ParentFilterContext is not null
+            ? ParentFilterContext.HasExactFilterMatch
+                ? FilterMatchMode.AnyTermExact
+                : FilterMatchMode.AnyTermContains
+            : (Items ?? []).Any(candidate => MatchesFilterTerms(candidate, filterTerms, FilterMatchMode.AnyTermExact))
+                ? FilterMatchMode.AnyTermExact
+                : FilterMatchMode.AnyTermContains;
+
+        return MatchesFilterTerms(item, filterTerms, matchMode);
+    }
+
+    private bool MatchesFilterTerms(TItem item, IReadOnlyList<string> filterTerms, FilterMatchMode matchMode)
+    {
+        return filterTerms.Any(HasFilterTerm);
+
+        bool HasFilterTerm(string filterTerm)
+        {
+            return GridContext.Columns.Any(column =>
+            {
+                var searchText = column.GetSearchText(item);
+
+                return matchMode switch
+                {
+                    FilterMatchMode.AnyTermExact => string.Equals(searchText, filterTerm, StringComparison.CurrentCultureIgnoreCase),
+                    _ => searchText.Contains(filterTerm, StringComparison.CurrentCultureIgnoreCase)
+                };
+            });
+        }
+    }
+
+    private static string[] GetFilterTerms(string filterText)
+    {
+        return filterText.Split(
+            (char[]?)null,
+            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    }
+
+    private enum FilterMatchMode
+    {
+        AnyTermExact,
+        AnyTermContains
     }
 
     private bool IsLocalFilterMatch(TItem item)
@@ -536,6 +721,12 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
 
     protected override void OnParametersSet()
     {
+        foreach (var column in _sortColumns.Where(column => !column.IsSortable).ToArray())
+        {
+            _sortColumns.Remove(column);
+            _sortDirections.Remove(column);
+        }
+
         if (!string.Equals(FilterText, _lastFilterTextParameter, StringComparison.Ordinal))
         {
             _currentFilterText = FilterText;

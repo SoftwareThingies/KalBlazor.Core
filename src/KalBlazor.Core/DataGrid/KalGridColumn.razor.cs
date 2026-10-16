@@ -33,6 +33,12 @@ public partial class KalGridColumn<TItem> : IDisposable
     [Parameter]
     public Expression<Func<TItem, object?>>? Property { get; set; }
 
+    /// <summary>
+    /// Enables sorting by this column when a <see cref="Property" /> is provided.
+    /// </summary>
+    [Parameter]
+    public bool EnableSorting { get; set; } = true;
+
     [Parameter]
     public RenderFragment<TItem>? CellTemplate { get; set; }
 
@@ -62,6 +68,18 @@ public partial class KalGridColumn<TItem> : IDisposable
 
     [Parameter]
     public string? AdditionalHeaderClass { get; set; }
+
+    [Parameter]
+    public string? SortIconAscending { get; set; }
+
+    [Parameter]
+    public string? SortIconDescending { get; set; }
+
+    [Parameter]
+    public string? SortIconAscendingClass { get; set; }
+
+    [Parameter]
+    public string? SortIconDescendingClass { get; set; }
 
     [Parameter]
     public string? CellClass { get; set; }
@@ -99,6 +117,8 @@ public partial class KalGridColumn<TItem> : IDisposable
 
     internal IReadOnlyDictionary<string, object>? HeaderAttributes => FilteredAdditionalAttributes;
 
+    internal bool IsSortable => EnableSorting && Property is not null;
+
     internal string CellCssClass
     {
         get
@@ -132,7 +152,7 @@ public partial class KalGridColumn<TItem> : IDisposable
         }
     }
 
-    private string HeaderText => !string.IsNullOrWhiteSpace(Title) ? Title : PropertyName;
+    internal string HeaderText => !string.IsNullOrWhiteSpace(Title) ? Title : PropertyName;
 
     private string PropertyName => TryGetPropertyInfo(Property, out var property) ? property.Name : string.Empty;
 
@@ -146,6 +166,8 @@ public partial class KalGridColumn<TItem> : IDisposable
 
         return Convert.ToString(value, CultureInfo.CurrentCulture) ?? string.Empty;
     }
+
+    internal object? GetSortValue(TItem item) => GetPropertyValue(item);
 
     internal RenderFragment RenderCell(TItem item)
     {

@@ -5,10 +5,11 @@
     <input
         class="@InputCssClass"
         type="search"
-        value="@FilterContext?.FilterText"
+        value="@PendingFilterText"
         placeholder="@Placeholder"
         aria-label="@Placeholder"
-        @oninput="OnInput" />
+        @oninput="OnInput"
+        @onkeydown="OnKeyDown" />
 
     @if (ShowResetButton)
     {
