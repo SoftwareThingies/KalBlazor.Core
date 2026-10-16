@@ -26,6 +26,7 @@ public static class Icons
     public const string Filter = "filter";
     public const string Graph = "graph";
     public const string Minus = "minus";
+    public const string Microphone = "microphone";
     public const string Pencil = "pencil";
     public const string PdfDocument = "pdf-document";
     public const string PdfBasic = "pdf-basic";

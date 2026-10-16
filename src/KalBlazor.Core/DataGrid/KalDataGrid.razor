@@ -54,8 +54,22 @@
                             }
                             else if (entry is KalGridColumn<TItem> column)
                             {
-                                <th @attributes="column.HeaderAttributes" class="@GetHeaderCellCssClass(column)" scope="@column.Scope">
-                                    @column.HeaderContent
+                                <th @attributes="column.HeaderAttributes" class="@GetHeaderCellCssClass(column)" scope="@column.Scope" aria-sort="@GetHeaderAriaSort(column)">
+                                    @if (column.IsSortable)
+                                    {
+                                        <button type="button"
+                                                class="inline-flex items-center gap-1"
+                                                aria-label="@GetSortButtonAriaLabel(column)"
+                                                @onclick="() => ToggleSortAsync(column)">
+                                            @column.HeaderContent
+                                            <KalIcon Icon="@GetSortIcon(column)"
+                                                     AdditionalClass="@GetSortIconClass(column)" />
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        @column.HeaderContent
+                                    }
                                 </th>
                             }
                         }
