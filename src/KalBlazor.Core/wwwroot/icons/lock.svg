@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <symbol id="lock" viewBox="0 0 24 24">
+    <rect x="4" y="10" width="16" height="11" rx="2" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" />
+    <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M7 10V7a5 5 0 0 1 10 0v3" />
+    <circle cx="12" cy="15" r="1" fill="none" stroke="currentColor" />
+    <path fill="none" stroke="currentColor" stroke-linecap="round" d="M12 16v2" />
+  </symbol>
+</svg>
