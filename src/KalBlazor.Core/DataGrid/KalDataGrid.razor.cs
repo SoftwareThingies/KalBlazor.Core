@@ -42,6 +42,8 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
 
     string? IKalDataGridFilterContext.FilterText => InheritedFilterText;
 
+    bool IKalDataGridFilterContext.HasExactFilterMatch => HasExactFilterMatch;
+
     [CascadingParameter]
     private KalDataGridChildRowExpansionContext? ParentChildRowExpansionContext { get; set; }
 
@@ -254,6 +256,12 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
 
     private bool HasActiveFilter => !string.IsNullOrWhiteSpace(InheritedFilterText);
 
+    private bool HasExactFilterMatch => !string.IsNullOrWhiteSpace(InheritedFilterText)
+        && (Items ?? []).Any(item => MatchesFilterTerms(
+            item,
+            GetFilterTerms(InheritedFilterText!),
+            FilterMatchMode.AnyTermExact));
+
     private string? EffectiveFilterText => ParentFilterOverride ? null : InheritedFilterText;
 
     private IEnumerable<TItem> BoundItems => ApplySorting((Items ?? []).Where(IsItemVisible));
@@ -410,8 +418,54 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
 
     private bool ItemMatchesFilter(TItem item, string filterText)
     {
-        return GridContext.Columns.Any(column =>
-            column.GetSearchText(item).Contains(filterText, StringComparison.CurrentCultureIgnoreCase));
+        var filterTerms = GetFilterTerms(filterText);
+
+        if (filterTerms.Length == 0)
+        {
+            return false;
+        }
+
+        var matchMode = ParentFilterContext is not null
+            ? ParentFilterContext.HasExactFilterMatch
+                ? FilterMatchMode.AnyTermExact
+                : FilterMatchMode.AnyTermContains
+            : (Items ?? []).Any(candidate => MatchesFilterTerms(candidate, filterTerms, FilterMatchMode.AnyTermExact))
+                ? FilterMatchMode.AnyTermExact
+                : FilterMatchMode.AnyTermContains;
+
+        return MatchesFilterTerms(item, filterTerms, matchMode);
+    }
+
+    private bool MatchesFilterTerms(TItem item, IReadOnlyList<string> filterTerms, FilterMatchMode matchMode)
+    {
+        return filterTerms.Any(HasFilterTerm);
+
+        bool HasFilterTerm(string filterTerm)
+        {
+            return GridContext.Columns.Any(column =>
+            {
+                var searchText = column.GetSearchText(item);
+
+                return matchMode switch
+                {
+                    FilterMatchMode.AnyTermExact => string.Equals(searchText, filterTerm, StringComparison.CurrentCultureIgnoreCase),
+                    _ => searchText.Contains(filterTerm, StringComparison.CurrentCultureIgnoreCase)
+                };
+            });
+        }
+    }
+
+    private static string[] GetFilterTerms(string filterText)
+    {
+        return filterText.Split(
+            (char[]?)null,
+            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    }
+
+    private enum FilterMatchMode
+    {
+        AnyTermExact,
+        AnyTermContains
     }
 
     private bool IsLocalFilterMatch(TItem item)

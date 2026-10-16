@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 
 namespace SoftwareThingies.KalBlazor.Core.DataGrid;
 
@@ -6,6 +7,9 @@ public partial class KalDataGridFilter : BaseComponent
 {
     private const string DefaultInputClass = "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition-colors placeholder:text-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200";
     private const string DefaultResetButtonClass = "rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50";
+    private string? _pendingFilterText;
+    private string? _lastAppliedFilterText;
+    private bool _hasInitializedFilterText;
 
     protected override string ComponentClass => "kal-data-grid-filter";
 
@@ -13,6 +17,9 @@ public partial class KalDataGridFilter : BaseComponent
 
     [Parameter]
     public string Placeholder { get; set; } = "Filter...";
+
+    [Parameter]
+    public KalDataGridFilterMode FilterMode { get; set; } = KalDataGridFilterMode.OnChange;
 
     [Parameter]
     public string? InputClass { get; set; }
@@ -41,21 +48,48 @@ public partial class KalDataGridFilter : BaseComponent
 
     private bool HasFilterText => !string.IsNullOrWhiteSpace(FilterContext?.FilterText);
 
+    private string? PendingFilterText => _pendingFilterText;
+
     protected override void OnParametersSet()
     {
         if (FilterContext is null)
         {
             throw new InvalidOperationException($"{nameof(KalDataGridFilter)} must be placed inside the {nameof(KalDataGrid<object>)} Filter template.");
         }
+
+        if (!_hasInitializedFilterText
+            || !string.Equals(FilterContext.FilterText, _lastAppliedFilterText, StringComparison.Ordinal))
+        {
+            _pendingFilterText = FilterContext.FilterText;
+            _lastAppliedFilterText = FilterContext.FilterText;
+            _hasInitializedFilterText = true;
+        }
     }
 
     private Task OnInput(ChangeEventArgs args)
     {
-        return FilterContext!.SetFilterTextAsync(args.Value?.ToString());
+        _pendingFilterText = args.Value?.ToString();
+
+        return FilterMode == KalDataGridFilterMode.OnChange
+            ? ApplyFilterAsync()
+            : Task.CompletedTask;
+    }
+
+    private Task OnKeyDown(KeyboardEventArgs args)
+    {
+        return args.Key == "Enter" && FilterMode == KalDataGridFilterMode.OnEnterKey
+            ? ApplyFilterAsync()
+            : Task.CompletedTask;
     }
 
     private Task ResetAsync()
     {
+        _pendingFilterText = null;
         return FilterContext!.ClearFilterTextAsync();
+    }
+
+    private Task ApplyFilterAsync()
+    {
+        return FilterContext!.SetFilterTextAsync(_pendingFilterText);
     }
 }
