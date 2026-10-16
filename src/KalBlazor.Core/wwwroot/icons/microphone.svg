@@ -7,7 +7,7 @@
         <path fill="none" stroke="currentColor" stroke-linecap="round" d="M18 8.5v5" />
         <path fill="none" stroke="currentColor" stroke-linecap="round" d="M6.5 8.5v5" />
       </g>
-      <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M11 14.5v6.5" />
+      <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M11 16v5" />
       <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M7.5 21h7" />
     </g>
   </symbol>
