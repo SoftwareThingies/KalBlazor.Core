@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <symbol id="company" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M5 21V5a2 2 0 0 1 2-2h5v18M12 21V9a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v12" />
+    <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M8 7h1M8 11h1M8 15h1M15 11h1M15 15h1M15 18h1" />
+  </symbol>
+</svg>

@@ -15,6 +15,7 @@ public static class Icons
     public const string Check = "check";
     public const string CircleInfo = "circle-info";
     public const string Clapperboard = "clapperboard";
+    public const string Company = "company";
     public const string Document = "document";
     public const string Eye = "eye";
     public const string ExcelDocument = "excel-document";
@@ -23,6 +24,9 @@ public static class Icons
     public const string FileArrowUp = "file-arrow-up";
     public const string FileInvoiceEuro = "file-invoice-euro";
     public const string FileLines = "file-lines";
+    public const string FilePencil = "file-pencil";
+    public const string FileSignature = "file-signature";
+    public const string FileStamp = "file-stamp";
     public const string Filter = "filter";
     public const string Graph = "graph";
     public const string Lock = "lock";
