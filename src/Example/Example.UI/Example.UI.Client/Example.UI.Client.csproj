@@ -11,7 +11,7 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.13" />
-        <PackageReference Include="SoftwareThingies.KalBlazor.Core" Version="0.14.0" />
+        <PackageReference Include="SoftwareThingies.KalBlazor.Core" Version="0.16.0" />
     </ItemGroup>
 
 </Project>
