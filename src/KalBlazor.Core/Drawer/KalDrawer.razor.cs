@@ -48,6 +48,12 @@ public partial class KalDrawer : IDisposable
     public EventCallback<KalDrawerState> InitialStateChanged { get; set; }
 
     [Parameter]
+    public EventCallback OnClosed { get; set; }
+
+    [Parameter]
+    public EventCallback OnOpened { get; set; }
+
+    [Parameter]
     public bool Minimizable { get; set; }
 
     [Parameter]
@@ -267,8 +273,22 @@ public partial class KalDrawer : IDisposable
             return;
         }
 
+        var previousState = _lastNotifiedState;
         _lastNotifiedState = state;
-        _ = InvokeAsync(() => InitialStateChanged.InvokeAsync(state));
+        _ = InvokeAsync(async () =>
+        {
+            await InitialStateChanged.InvokeAsync(state);
+
+            if (state == KalDrawerState.Hidden && previousState != KalDrawerState.Hidden)
+            {
+                await OnClosed.InvokeAsync();
+            }
+
+            if (state == KalDrawerState.Maximized && previousState != KalDrawerState.Maximized)
+            {
+                await OnOpened.InvokeAsync();
+            }
+        });
     }
 
     private void ToggleMinimized()
