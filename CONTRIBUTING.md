@@ -36,6 +36,8 @@ After a pull request is merged into `main`, GitHub Actions automatically:
 6. publishes `SoftwareThingies.KalBlazor.Core` to NuGet.org,
 7. creates the corresponding Git tag, for example `v0.2.0`.
 
+For pull requests targeting `main`, the workflow builds and publishes a pre-release NuGet package before the merge. Its version follows the branch-based version bump and includes the pull request number and source commit, for example `0.17.0-pr.42.a1b2c3d`. The package is published to NuGet.org for pull requests from branches in this repository. GitHub does not provide repository secrets to workflows triggered by fork pull requests, so those runs only produce a downloadable GitHub Actions artifact. Stable packages are published after changes are merged into `main`.
+
 Direct commits to `main` should be disabled in the repository settings. If one is ever allowed, the release pipeline treats it as a patch release.
 
 The repository starts at version `0.0.0`. If no release tag exists yet, the pipeline uses the version currently stored in the project file as its baseline.
