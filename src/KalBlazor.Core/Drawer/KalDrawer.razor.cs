@@ -54,6 +54,12 @@ public partial class KalDrawer : IDisposable
     public EventCallback OnOpened { get; set; }
 
     [Parameter]
+    public EventCallback OnClosedAsync { get; set; }
+
+    [Parameter]
+    public EventCallback OnOpenedAsync { get; set; }
+
+    [Parameter]
     public bool Minimizable { get; set; }
 
     [Parameter]
@@ -282,11 +288,13 @@ public partial class KalDrawer : IDisposable
             if (state == KalDrawerState.Hidden && previousState != KalDrawerState.Hidden)
             {
                 await OnClosed.InvokeAsync();
+                await OnClosedAsync.InvokeAsync();
             }
 
             if (state == KalDrawerState.Maximized && previousState != KalDrawerState.Maximized)
             {
                 await OnOpened.InvokeAsync();
+                await OnOpenedAsync.InvokeAsync();
             }
         });
     }
