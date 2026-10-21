@@ -31,6 +31,7 @@ public static class Icons
     public const string Graph = "graph";
     public const string Lock = "lock";
     public const string LockOpen = "lock-open";
+    public const string LocationPin = "location-pin";
     public const string Minus = "minus";
     public const string Microphone = "microphone";
     public const string Pencil = "pencil";
