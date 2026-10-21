@@ -6,7 +6,7 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
 {
     private const string DescendantFilterOverrideCascadeName = "KalDataGridDescendantFilterOverride";
     private const string DescendantFilterMatchCascadeName = "KalDataGridDescendantFilterMatch";
-    private const string DefaultTableClass = "w-full min-w-full border-collapse text-sm";
+    private const string DefaultTableClass = "w-full min-w-full";
     private const string DefaultHeaderClass = "";
     private const string DefaultHeaderRowClass = "";
     private const string DefaultBodyClass = "divide-y";
