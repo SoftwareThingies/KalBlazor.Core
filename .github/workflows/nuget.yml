@@ -42,6 +42,8 @@ jobs:
           PR_SOURCE_BRANCH: ${{ github.head_ref }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BUILD_NUMBER: ${{ github.run_number }}
+          BUILD_ATTEMPT: ${{ github.run_attempt }}
         run: |
           git fetch --tags --force
 
@@ -106,8 +108,7 @@ jobs:
           VERSION="$MAJOR.$MINOR.$PATCH"
           PACKAGE_VERSION="$VERSION"
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            SHORT_SHA="$(printf '%s' "$PR_HEAD_SHA" | cut -c1-7)"
-            PACKAGE_VERSION="$VERSION-pr.$PR_NUMBER.$SHORT_SHA"
+            PACKAGE_VERSION="$VERSION-pr.$PR_NUMBER.$BUILD_NUMBER.$BUILD_ATTEMPT"
           fi
           ASSEMBLY_VERSION="$MAJOR.$MINOR.$PATCH.0"
           echo "semver=$VERSION" >> "$GITHUB_OUTPUT"
