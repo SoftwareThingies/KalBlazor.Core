@@ -379,6 +379,7 @@
                         <KalGridColumn TItem="CustomerAccount"
                                        Title="Kunde"
                                        Property="@(account => account.Name)"
+                                       SearchTextSelector="@(account => account.Segment)"
                                        WidthClass="w-[18rem]"
                                        AdditionalHeaderClass="bg-amber-50 text-amber-900"
                                        Tooltip="@CustomerColumnTooltip"
@@ -394,9 +395,9 @@
                                 <a href="@account.CustomerUrl"
                                    class="font-semibold text-amber-700 hover:text-amber-900 hover:underline"
                                    title="Customer profile link">
-                                    @account.Name
+                                    <KalDataGridHighlight Text="@account.Name" />
                                 </a>
-                                <div class="text-xs text-slate-500">@account.Segment</div>
+                                <div class="text-xs text-slate-500"><KalDataGridHighlight Text="@account.Segment" /></div>
                             </CellTemplate>
                             <CollapsedContent Context="account">
                                 <div>Status: @account.Status</div>
@@ -422,7 +423,7 @@
                             <CellTemplate Context="account">
                                 <span class="@GetStatusClass(account.Status)"
                                       title="Status badge">
-                                    @account.Status
+                                    <KalDataGridHighlight Text="@account.Status" />
                                 </span>
                             </CellTemplate>
                         </KalGridColumn>
@@ -441,7 +442,7 @@
                                        Tooltip="@MrrColumnTooltip"
                                        CellTooltip="GetMrrTooltip">
                             <CellTemplate Context="account">
-                                @account.MonthlyRecurringRevenue.ToString("N0") EUR
+                                <KalDataGridHighlight Text="@(account.MonthlyRecurringRevenue.ToString("N0") + " EUR")" />
                             </CellTemplate>
                         </KalGridColumn>
 
@@ -463,7 +464,7 @@
                                        TooltipClass="@IceTooltipClass">
                             <CellTemplate Context="account">
                                 <a href="@account.SupportUrl" class="text-amber-700 hover:underline">
-                                    @account.OpenTickets
+                                    <KalDataGridHighlight Text="@account.OpenTickets.ToString()" />
                                 </a>
                             </CellTemplate>
                         </KalGridColumn>
@@ -477,7 +478,7 @@
                                        TooltipClass="@SuccessTooltipClass">
                             <CellTemplate Context="account">
                                 <a href="@account.OwnerUrl" class="text-amber-700 hover:underline">
-                                    @account.Owner
+                                    <KalDataGridHighlight Text="@account.Owner" />
                                 </a>
                             </CellTemplate>
                         </KalGridColumn>
@@ -497,7 +498,7 @@
                                        Tooltip="@ArrColumnTooltip"
                                        CellTooltip="GetArrTooltip">
                             <CellTemplate Context="account">
-                                @account.AnnualRecurringRevenue.ToString("N0") EUR
+                                <KalDataGridHighlight Text="@(account.AnnualRecurringRevenue.ToString("N0") + " EUR")" />
                             </CellTemplate>
                         </KalGridColumn>
 
@@ -509,7 +510,7 @@
                                        Tooltip="@ChurnRiskColumnTooltip"
                                        CellTooltip="GetChurnRiskTooltip">
                             <CellTemplate Context="account">
-                                @account.ChurnRiskPercent%
+                                <KalDataGridHighlight Text="@(account.ChurnRiskPercent + "%")" />
                             </CellTemplate>
                         </KalGridColumn>
                     </Columns>
@@ -543,7 +544,7 @@
                                                Tooltip="@InvoiceAmountColumnTooltip"
                                                CellTooltip="GetInvoiceAmountTooltip">
                                     <CellTemplate Context="invoice">
-                                        @invoice.Amount.ToString("N0") EUR
+                                        <KalDataGridHighlight Text="@(invoice.Amount.ToString("N0") + " EUR")" />
                                     </CellTemplate>
                                 </KalGridColumn>
                                 <KalGridColumn TItem="CustomerInvoice"
@@ -553,7 +554,7 @@
                                                Tooltip="@InvoiceStatusColumnTooltip"
                                                CellTooltip="GetInvoiceStatusTooltip">
                                     <CellTemplate Context="invoice">
-                                        <span class="@GetInvoiceStatusClass(invoice.Status)">@invoice.Status</span>
+                                        <span class="@GetInvoiceStatusClass(invoice.Status)"><KalDataGridHighlight Text="@invoice.Status" /></span>
                                     </CellTemplate>
                                 </KalGridColumn>
                             </Columns>
@@ -563,8 +564,8 @@
                                     @foreach (var line in invoice.Lines)
                                     {
                                         <div class="rounded-md border border-slate-200 bg-white px-3 py-2">
-                                            <div class="font-medium text-slate-900">@line.Description</div>
-                                            <div>@line.Quantity x @line.UnitPrice.ToString("N0") EUR</div>
+                                            <div class="font-medium text-slate-900"><KalDataGridHighlight Text="@line.Description" /></div>
+                                            <div><KalDataGridHighlight Text="@line.Quantity.ToString()" /> x <KalDataGridHighlight Text="@(line.UnitPrice.ToString("N0") + " EUR")" /></div>
                                         </div>
                                     }
                                 </div>

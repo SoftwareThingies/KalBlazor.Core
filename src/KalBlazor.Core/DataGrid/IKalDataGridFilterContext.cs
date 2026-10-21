@@ -4,6 +4,8 @@ internal interface IKalDataGridFilterContext
 {
     string? FilterText { get; }
 
+    string HighlightClass { get; }
+
     bool HasExactFilterMatch { get; }
 
     Task SetFilterTextAsync(string? filterText);
