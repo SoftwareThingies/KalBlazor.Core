@@ -16,7 +16,7 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
     private const string DefaultExpandCellClass = "w-0 align-top";
     private const string DefaultExpandButtonClass = "inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-200";
     private const string DefaultChildRowClass = "kal-data-grid-child-row";
-    private const string DefaultChildCellClass = "bg-slate-50 px-4 py-4";
+    private const string DefaultChildCellClass = "bg-slate-50";
     private const string DefaultChildContentClass = "w-full";
     protected override string ComponentClass => "kal-data-grid";
 
