@@ -1,3 +1,5 @@
+@source inline("inline-block shrink-0 overflow-visible align-middle fill-current stroke-current");
+
 .kal-icon {
     height: 1em;
     width: calc(1em * var(--kal-icon-aspect-ratio, 1));
