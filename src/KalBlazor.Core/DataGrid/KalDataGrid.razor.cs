@@ -11,9 +11,9 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
     private const string DefaultHeaderRowClass = "";
     private const string DefaultBodyClass = "divide-y";
     private const string DefaultRowClass = "transition-colors";
-    private const string DefaultExpandHeaderCellClass = "w-0 px-3 py-3";
+    private const string DefaultExpandHeaderCellClass = "w-0";
     private const string DefaultExpandAllButtonClass = "inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-200";
-    private const string DefaultExpandCellClass = "w-0 px-3 py-3 align-top";
+    private const string DefaultExpandCellClass = "w-0 align-top";
     private const string DefaultExpandButtonClass = "inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-200";
     private const string DefaultChildRowClass = "kal-data-grid-child-row";
     private const string DefaultChildCellClass = "bg-slate-50 px-4 py-4";
