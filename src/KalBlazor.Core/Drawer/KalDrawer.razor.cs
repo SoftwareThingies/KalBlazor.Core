@@ -13,7 +13,7 @@ public partial class KalDrawer : IDisposable
     private KalDrawerState? _lastNotifiedState;
 
     protected override string ComponentClass =>
-        $"kal-drawer {(IsMinimized ? "kal-drawer-minimized" : IsOpen ? "kal-drawer-open" : "kal-drawer-closed")}";
+        $"kal-drawer {(IsMinimized ? "kal-drawer-minimized" : IsOpen ? "kal-drawer-open" : "kal-drawer-closed")} {(IsHidden ? "pointer-events-none" : string.Empty)}".Trim();
 
     protected override string DefaultClass => "fixed flex w-screen flex-col overflow-x-hidden bg-white text-slate-950 transition-[width,max-width,transform,translate] duration-200 ease-out";
 
