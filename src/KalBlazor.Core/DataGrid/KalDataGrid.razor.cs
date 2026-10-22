@@ -6,18 +6,19 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
 {
     private const string DescendantFilterOverrideCascadeName = "KalDataGridDescendantFilterOverride";
     private const string DescendantFilterMatchCascadeName = "KalDataGridDescendantFilterMatch";
-    private const string DefaultTableClass = "w-full min-w-full border-collapse text-sm";
+    private const string DefaultTableClass = "w-full min-w-full";
     private const string DefaultHeaderClass = "";
     private const string DefaultHeaderRowClass = "";
     private const string DefaultBodyClass = "divide-y";
     private const string DefaultRowClass = "transition-colors";
-    private const string DefaultExpandHeaderCellClass = "w-0 px-3 py-3";
+    private const string DefaultExpandHeaderCellClass = "w-0";
     private const string DefaultExpandAllButtonClass = "inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-200";
-    private const string DefaultExpandCellClass = "w-0 px-3 py-3 align-top";
+    private const string DefaultExpandCellClass = "w-0 align-top";
     private const string DefaultExpandButtonClass = "inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-200";
     private const string DefaultChildRowClass = "kal-data-grid-child-row";
-    private const string DefaultChildCellClass = "bg-slate-50 px-4 py-4";
+    private const string DefaultChildCellClass = "bg-slate-50";
     private const string DefaultChildContentClass = "w-full";
+    private const string DefaultHighlightCss = "bg-yellow-200 shadow-sm shadow-gray-400";
     protected override string ComponentClass => "kal-data-grid";
 
     protected override string DefaultClass => "w-full";
@@ -41,6 +42,8 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
     private KalDataGridChildRowExpansionContext ChildRowExpansionContext { get; } = new();
 
     string? IKalDataGridFilterContext.FilterText => InheritedFilterText;
+
+    string IKalDataGridFilterContext.HighlightClass => EffectiveHighlightClass;
 
     bool IKalDataGridFilterContext.HasExactFilterMatch => HasExactFilterMatch;
 
@@ -82,6 +85,12 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
 
     [Parameter]
     public EventCallback<string?> FilterTextChanged { get; set; }
+
+    /// <summary>
+    /// Replaces the default classes used to highlight matching text in property cells.
+    /// </summary>
+    [Parameter]
+    public string? HighlightClass { get; set; }
 
     [Parameter]
     public string? FilterClass { get; set; }
@@ -263,6 +272,10 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
             FilterMatchMode.AnyTermExact));
 
     private string? EffectiveFilterText => ParentFilterOverride ? null : InheritedFilterText;
+
+    private string EffectiveHighlightClass => !string.IsNullOrWhiteSpace(HighlightClass)
+        ? HighlightClass
+        : ParentFilterContext?.HighlightClass ?? DefaultHighlightCss;
 
     private IEnumerable<TItem> BoundItems => ApplySorting((Items ?? []).Where(IsItemVisible));
 
@@ -448,8 +461,8 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
 
                 return matchMode switch
                 {
-                    FilterMatchMode.AnyTermExact => string.Equals(searchText, filterTerm, StringComparison.CurrentCultureIgnoreCase),
-                    _ => searchText.Contains(filterTerm, StringComparison.CurrentCultureIgnoreCase)
+                    FilterMatchMode.AnyTermExact => KalDataGridSearch.Equals(searchText, filterTerm),
+                    _ => KalDataGridSearch.Contains(searchText, filterTerm)
                 };
             });
         }
@@ -553,7 +566,7 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
         }
 
         _lastReportedFilterMatch = hasMatch;
-        ParentDescendantFilterMatchContext.ReportMatch(hasMatch);
+        ParentDescendantFilterMatchContext.ReportMatch(this, hasMatch);
     }
 
     private bool IsChildRowExpanded(TItem item)

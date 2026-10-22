@@ -70,6 +70,11 @@ public partial class KalDataGridFilter : BaseComponent
     {
         _pendingFilterText = args.Value?.ToString();
 
+        if (string.IsNullOrWhiteSpace(_pendingFilterText))
+        {
+            return FilterContext!.ClearFilterTextAsync();
+        }
+
         return FilterMode == KalDataGridFilterMode.OnChange
             ? ApplyFilterAsync()
             : Task.CompletedTask;

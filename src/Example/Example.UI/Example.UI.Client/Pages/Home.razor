@@ -1,12 +1,191 @@
-﻿@page "/"
+@page "/"
+@using SoftwareThingies.KalBlazor.Core.DataGrid
 
 <KalAppBar Fixed>
     <KalAppBarToggle HorizontalAlignment="KalHorizontalAlignment.Right" />
-    <a href="/" class="order-20 text-lg font-semibold text-left">
-        KalBlazor
-    </a>
+    <a href="/" class="order-20 text-lg font-semibold text-left">KalBlazor</a>
     <KalCollapsible HorizontalAlignment="@KalHorizontalAlignment.Left">
-        <a href="/" class="font-medium">Home</a>
+        <a href="#components" class="font-medium">Komponenten</a>
+        <a href="#data-grid" class="font-medium">DataGrid</a>
         <a href="/not-found" class="font-medium">Not found</a>
     </KalCollapsible>
 </KalAppBar>
+
+<KalAppMainContent Class="mx-auto max-w-6xl space-y-10 px-4 py-8 sm:px-6">
+    <header class="space-y-3">
+        <p class="text-sm font-semibold uppercase tracking-widest text-emerald-700">Example.UI.Client</p>
+        <h1 class="text-3xl font-bold tracking-tight">KalBlazor Komponenten</h1>
+        <p class="max-w-3xl text-slate-600">Interaktive Beispiele zum Prüfen, ob die Komponenten und statischen Assets aus dem NuGet-Paket korrekt geladen werden.</p>
+    </header>
+
+    <section id="components" class="space-y-6">
+        <h2 class="border-b pb-2 text-2xl font-semibold">Navigation und Layout</h2>
+        <div class="grid gap-4 md:grid-cols-2">
+            <article class="rounded-lg border p-5">
+                <h3 class="mb-3 font-semibold">AppBar, Toggle und Collapsible</h3>
+                <p class="mb-4 text-sm text-slate-600">Oben auf der Seite: AppBar mit ausklappbarer Navigation. Verkleinere das Browserfenster, um den Toggle zu verwenden.</p>
+                <KalAppBarIcon>
+                    <KalIcon Icon="@Icons.Bars" AdditionalClass="size-5" />
+                </KalAppBarIcon>
+                <KalAppBarIconToggled>
+                    <KalIcon Icon="@Icons.X" AdditionalClass="size-5" />
+                </KalAppBarIconToggled>
+            </article>
+            <article class="rounded-lg border p-5">
+                <h3 class="mb-3 font-semibold">Theme und Icons</h3>
+                <div class="flex flex-wrap items-center gap-4">
+                    <KalThemeToggle>Darstellung umschalten</KalThemeToggle>
+                    <KalIcon Icon="@Icons.CircleInfo" AriaLabel="Information" AdditionalClass="size-6 text-blue-600" />
+                    <KalIcon Icon="@Icons.Check" AriaLabel="Erfolgreich" AdditionalClass="size-6 text-emerald-600" />
+                    <KalIcon Icon="@Icons.TriangleExclamation" AriaLabel="Hinweis" AdditionalClass="size-6 text-amber-600" />
+                </div>
+                <p class="mt-3 text-sm text-slate-600">Icons werden als SVG aus den statischen NuGet-Assets geladen.</p>
+            </article>
+        </div>
+
+        <article class="rounded-lg border p-5">
+            <h3 class="mb-3 font-semibold">Dropdown und Tooltip</h3>
+            <div class="flex flex-wrap items-center gap-5">
+                <KalDropdown TriggerText="Aktionen" AriaLabel="Beispielaktionen">
+                    <div class="w-48 rounded-md border bg-white p-2 shadow-lg">
+                        <button type="button" class="block w-full rounded px-3 py-2 text-left hover:bg-slate-100">Bearbeiten</button>
+                        <button type="button" class="block w-full rounded px-3 py-2 text-left hover:bg-slate-100">Duplizieren</button>
+                        <button type="button" class="block w-full rounded px-3 py-2 text-left hover:bg-slate-100">Archivieren</button>
+                    </div>
+                </KalDropdown>
+                <button type="button" Tooltip="Der Tooltip wird vom Paket-JavaScript positioniert." class="rounded border px-3 py-2">Mauszeiger hierher bewegen</button>
+            </div>
+        </article>
+
+        <article class="rounded-lg border p-5">
+            <h3 class="mb-3 font-semibold">Drawer und Trigger</h3>
+            <div class="flex flex-wrap gap-3">
+                <KalDrawerTrigger TargetId="example-drawer" Action="KalDrawerTriggerAction.Open">
+                    <span class="rounded bg-emerald-700 px-4 py-2 text-white">Drawer öffnen</span>
+                </KalDrawerTrigger>
+                <KalDrawerTrigger TargetId="example-drawer" Action="KalDrawerTriggerAction.Minimize">
+                    <span class="rounded border px-4 py-2">Minimieren</span>
+                </KalDrawerTrigger>
+            </div>
+            <KalDrawer Id="example-drawer" InitialState="KalDrawerState.Hidden" Side="KalDrawerSide.Right" Width="DrawerWidth.Sm" Backdrop="KalDrawerBackdrop.None" Minimizable>
+                <ChildContent Context="drawer">
+                    <KalDrawerHeader Class="border-b p-4">
+                        <div class="flex items-center justify-between">
+                            <strong>Beispiel-Drawer</strong>
+                            <KalDrawerTrigger TargetId="example-drawer" Action="KalDrawerTriggerAction.Close">
+                                <KalIcon Icon="@Icons.X" AriaLabel="Schließen" AdditionalClass="size-5" />
+                            </KalDrawerTrigger>
+                        </div>
+                    </KalDrawerHeader>
+                    <KalDrawerContent Class="flex-1 p-4">
+                        <p>Drawer-Inhalt. Verwende die Zustandsanzeige und die Aktionen, um den Drawer zu testen.</p>
+                        <KalDrawerStateView Context="state">
+                            <div class="mt-4 space-y-3">
+                                <p class="text-sm text-slate-500">Aktueller Zustand: <strong>@state.State</strong></p>
+                                <div class="flex gap-2">
+                                    <KalDrawerTrigger TargetId="example-drawer" Action="KalDrawerTriggerAction.Minimize">
+                                        <span class="rounded border px-3 py-2">Minimieren</span>
+                                    </KalDrawerTrigger>
+                                    <KalDrawerTrigger TargetId="example-drawer" Action="KalDrawerTriggerAction.Maximize">
+                                        <span class="rounded border px-3 py-2">Maximieren</span>
+                                    </KalDrawerTrigger>
+                                </div>
+                            </div>
+                        </KalDrawerStateView>
+                    </KalDrawerContent>
+                    <KalDrawerFooter Class="border-t p-4">
+                        <KalDrawerTrigger TargetId="example-drawer" Action="KalDrawerTriggerAction.Close">
+                            <span class="rounded border px-3 py-2">Schließen</span>
+                        </KalDrawerTrigger>
+                    </KalDrawerFooter>
+                </ChildContent>
+            </KalDrawer>
+        </article>
+    </section>
+
+    <section id="data-grid" class="space-y-4">
+        <h2 class="border-b pb-2 text-2xl font-semibold">DataGrid</h2>
+        <p class="text-sm text-slate-600">Filtere nach Paket-, Modul- oder Endpunktnamen. Treffer in verschachtelten Tabellen halten die übergeordneten Zeilen sichtbar und öffnen den passenden Detailbereich.</p>
+        <div class="overflow-x-auto rounded-lg border bg-white">
+            <KalDataGrid TItem="PackageSample" Items="@Packages" ItemKey="@(item => item.Name)">
+                <Filter>
+                    <KalDataGridFilter Placeholder="Pakete, Module oder Endpunkte filtern..." />
+                </Filter>
+                <Columns>
+                    <KalGridColumn TItem="PackageSample" Property="@(item => item.Name)" Title="Paket" />
+                    <KalGridColumn TItem="PackageSample" Property="@(item => item.Version)" Title="Version" />
+                    <KalGridColumn TItem="PackageSample" Property="@(item => item.Status)" Title="Status" />
+                </Columns>
+                <ChildRowContent Context="package">
+                    <KalDataGrid TItem="ModuleSample" Items="@package.Modules" ItemKey="@(item => item.Name)" AdditionalClass="rounded border bg-white">
+                        <Columns>
+                            <KalGridColumn TItem="ModuleSample" Property="@(item => item.Name)" Title="Modul" />
+                            <KalGridColumn TItem="ModuleSample" Property="@(item => item.Purpose)" Title="Funktion" />
+                        </Columns>
+                        <ChildRowContent Context="module">
+                            <KalDataGrid TItem="EndpointSample" Items="@module.Endpoints" AdditionalClass="rounded border bg-white">
+                                <Columns>
+                                    <KalGridColumn TItem="EndpointSample" Property="@(item => item.Name)" Title="Komponente / API" />
+                                    <KalGridColumn TItem="EndpointSample" Property="@(item => item.Description)" Title="Beschreibung" />
+                                </Columns>
+                            </KalDataGrid>
+                        </ChildRowContent>
+                    </KalDataGrid>
+                </ChildRowContent>
+            </KalDataGrid>
+        </div>
+    </section>
+
+    <KalFooterContent Class="border-t pt-5 text-sm text-slate-500">
+        Example.UI.Client · KalBlazor NuGet-Paket Demo
+    </KalFooterContent>
+</KalAppMainContent>
+
+<KalTooltip />
+
+@code {
+    private static readonly PackageSample[] Packages =
+    [
+        new("SoftwareThingies.KalBlazor.Core", "0.17.0-pr.32.79.1", "Geladen",
+        [
+            new("Layout", "App-Shell und Navigation",
+            [
+                new("KalLayout", "Kaskadiert Drawer-Zustand und AppBar-Abstände."),
+                new("KalAppBar", "Responsive Kopfzeile mit einklappbarem Inhalt."),
+                new("KalCollapsible", "Steuert ein- und ausblendbare Navigation.")
+            ]),
+            new("Drawer", "Seitliches Panel mit gesteuertem Zustand",
+            [
+                new("KalDrawer", "Overlay, Docked und Clipped Varianten."),
+                new("KalDrawerTrigger", "Öffnen, schließen, minimieren und maximieren."),
+                new("KalDrawerStateView", "Zeigt den Zustand des umgebenden Drawers.")
+            ]),
+            new("DataGrid", "Sortieren, filtern und Details verschachteln",
+            [
+                new("KalDataGrid", "Filtert auch über verschachtelte Tabellen hinweg."),
+                new("KalGridColumn", "Bindet Eigenschaften als sortierbare Spalten."),
+                new("KalDataGridFilter", "Filter-Eingabe im Filter-Slot der Tabelle.")
+            ])
+        ]),
+        new("Microsoft.AspNetCore.Components.WebAssembly", "10.0.13", "Geladen",
+        [
+            new("Rendering", "Blazor WebAssembly UI",
+            [
+                new("RenderFragment", "Inhalte und Templates zusammensetzen."),
+                new("EventCallback", "Interaktionen an Komponenten weitergeben.")
+            ])
+        ]),
+        new("Example.UI.Client", "lokal", "Aktiv",
+        [
+            new("NuGet-Integration", "Paket im Beispiel-Client verwenden",
+            [
+                new("Static Web Assets", "Icons, Styles und JavaScript aus dem Paket laden."),
+                new("Komponenten", "Öffentliche Razor-Komponenten im Client rendern.")
+            ])
+        ])
+    ];
+
+    private sealed record PackageSample(string Name, string Version, string Status, ModuleSample[] Modules);
+    private sealed record ModuleSample(string Name, string Purpose, EndpointSample[] Endpoints);
+    private sealed record EndpointSample(string Name, string Description);
+}
