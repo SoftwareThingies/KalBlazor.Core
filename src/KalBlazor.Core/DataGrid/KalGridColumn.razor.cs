@@ -14,7 +14,7 @@ public partial class KalGridColumn<TItem> : IDisposable
 
     protected override string ComponentClass => "kal-grid-column";
 
-    protected override string DefaultClass => "px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-600";
+    protected override string DefaultClass => "px-4 py-3 text-xs font-semibold tracking-wide text-slate-600";
 
     protected override string DynamicClass => $"{KalDataGridResponsiveClass.TextAlignment(Alignment)} {KalDataGridResponsiveClass.HideBelow(CollapseBelow)} {WidthClass}".Trim();
 
