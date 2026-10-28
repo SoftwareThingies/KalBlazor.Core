@@ -21,6 +21,7 @@ public static class Icons
     public const string ExcelDocument = "excel-document";
     public const string ExcelBasic = "excel-basic";
     public const string ExclamationCircle = "exclamation-circle";
+    public const string EllipsisVertical = "ellipsis-vertical";
     public const string FileArrowUp = "file-arrow-up";
     public const string FileInvoiceEuro = "file-invoice-euro";
     public const string FileLines = "file-lines";
