@@ -21,6 +21,7 @@ public static class Icons
     public const string ExcelDocument = "excel-document";
     public const string ExcelBasic = "excel-basic";
     public const string ExclamationCircle = "exclamation-circle";
+    public const string EllipsisVertical = "ellipsis-vertical";
     public const string FileArrowUp = "file-arrow-up";
     public const string FileInvoiceEuro = "file-invoice-euro";
     public const string FileLines = "file-lines";
@@ -31,6 +32,7 @@ public static class Icons
     public const string Graph = "graph";
     public const string Lock = "lock";
     public const string LockOpen = "lock-open";
+    public const string LocationPin = "location-pin";
     public const string Minus = "minus";
     public const string Microphone = "microphone";
     public const string Pencil = "pencil";

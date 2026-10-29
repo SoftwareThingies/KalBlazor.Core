@@ -1,0 +1,21 @@
+@namespace SoftwareThingies.KalBlazor.Core
+@inherits BaseComponent
+
+<button
+    type="button"
+    role="switch"
+    aria-checked="@IsToggledText"
+    aria-label="@AriaLabel"
+    @attributes="FilteredAdditionalAttributes"
+    class="@CssClass"
+    @onclick="ToggleAsync">
+    <span class="@(IsToggled ? ActiveCss : InactiveCss)">
+        <span class="@(IsToggled ? ActiveThumbCss : InactiveThumbCss)"></span>
+    </span>
+    @if (ChildContent is not null)
+    {
+        <span class="kal-toggle-content">
+            @ChildContent
+        </span>
+    }
+</button>

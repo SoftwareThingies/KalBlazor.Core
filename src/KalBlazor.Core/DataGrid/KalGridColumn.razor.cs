@@ -14,12 +14,15 @@ public partial class KalGridColumn<TItem> : IDisposable
 
     protected override string ComponentClass => "kal-grid-column";
 
-    protected override string DefaultClass => "px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-600";
+    protected override string DefaultClass => "px-4 py-3 text-xs font-semibold tracking-wide text-slate-600";
 
     protected override string DynamicClass => $"{KalDataGridResponsiveClass.TextAlignment(Alignment)} {KalDataGridResponsiveClass.HideBelow(CollapseBelow)} {WidthClass}".Trim();
 
     [CascadingParameter]
     internal KalDataGridContext<TItem>? GridContext { get; set; }
+
+    [CascadingParameter]
+    private IKalDataGridFilterContext? FilterContext { get; set; }
 
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
@@ -32,6 +35,12 @@ public partial class KalGridColumn<TItem> : IDisposable
 
     [Parameter]
     public Expression<Func<TItem, object?>>? Property { get; set; }
+
+    /// <summary>
+    /// Supplies additional text to include when filtering this column, such as values shown only in a cell template.
+    /// </summary>
+    [Parameter]
+    public Func<TItem, string?>? SearchTextSelector { get; set; }
 
     /// <summary>
     /// Enables sorting by this column when a <see cref="Property" /> is provided.
@@ -159,12 +168,10 @@ public partial class KalGridColumn<TItem> : IDisposable
     internal string GetSearchText(TItem item)
     {
         var value = GetPropertyValue(item);
-        if (value is null)
-        {
-            return string.Empty;
-        }
+        var propertyText = Convert.ToString(value, CultureInfo.CurrentCulture);
+        var additionalText = SearchTextSelector?.Invoke(item);
 
-        return Convert.ToString(value, CultureInfo.CurrentCulture) ?? string.Empty;
+        return string.Join(" ", new[] { propertyText, additionalText }.Where(text => !string.IsNullOrWhiteSpace(text)));
     }
 
     internal object? GetSortValue(TItem item) => GetPropertyValue(item);
@@ -179,10 +186,64 @@ public partial class KalGridColumn<TItem> : IDisposable
         if (Property is not null)
         {
             var value = GetPropertyValue(item);
-            return builder => builder.AddContent(0, value);
+            var filterTerms = GetMatchingFilterTerms(item);
+
+            if (value is null || filterTerms.Length == 0)
+            {
+                return builder => builder.AddContent(0, value);
+            }
+
+            var searchText = Convert.ToString(value, CultureInfo.CurrentCulture) ?? string.Empty;
+            var highlightRanges = KalDataGridSearch.GetHighlightRanges(searchText, FilterContext?.FilterText);
+
+            if (highlightRanges.Count == 0)
+            {
+                return builder => builder.AddContent(0, value);
+            }
+
+            return builder =>
+            {
+                var sequence = 0;
+                var position = 0;
+
+                foreach (var (start, end) in highlightRanges)
+                {
+                    if (start > position)
+                    {
+                        builder.AddContent(sequence++, searchText[position..start]);
+                    }
+
+                    builder.OpenElement(sequence++, "span");
+                    builder.AddAttribute(sequence++, "class", FilterContext?.HighlightClass);
+                    builder.AddContent(sequence++, searchText[start..end]);
+                    builder.CloseElement();
+                    position = end;
+                }
+
+                if (position < searchText.Length)
+                {
+                    builder.AddContent(sequence++, searchText[position..]);
+                }
+            };
         }
 
         return EmptyCell;
+    }
+
+    private string[] GetMatchingFilterTerms(TItem item)
+    {
+        var filterText = FilterContext?.FilterText;
+
+        if (Property is null || string.IsNullOrWhiteSpace(filterText))
+        {
+            return [];
+        }
+
+        var searchText = GetSearchText(item);
+        return filterText
+            .Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(term => KalDataGridSearch.Contains(searchText, term))
+            .ToArray();
     }
 
     protected override void OnInitialized()

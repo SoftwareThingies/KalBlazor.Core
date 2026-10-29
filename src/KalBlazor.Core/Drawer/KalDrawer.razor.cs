@@ -13,7 +13,7 @@ public partial class KalDrawer : IDisposable
     private KalDrawerState? _lastNotifiedState;
 
     protected override string ComponentClass =>
-        $"kal-drawer {(IsMinimized ? "kal-drawer-minimized" : IsOpen ? "kal-drawer-open" : "kal-drawer-closed")}";
+        $"kal-drawer {(IsMinimized ? "kal-drawer-minimized" : IsOpen ? "kal-drawer-open" : "kal-drawer-closed")} {(IsHidden ? "pointer-events-none" : string.Empty)}".Trim();
 
     protected override string DefaultClass => "fixed flex w-screen flex-col overflow-x-hidden bg-white text-slate-950 transition-[width,max-width,transform,translate] duration-200 ease-out";
 
@@ -46,6 +46,18 @@ public partial class KalDrawer : IDisposable
 
     [Parameter]
     public EventCallback<KalDrawerState> InitialStateChanged { get; set; }
+
+    [Parameter]
+    public EventCallback OnClosed { get; set; }
+
+    [Parameter]
+    public EventCallback OnOpened { get; set; }
+
+    [Parameter]
+    public EventCallback OnClosedAsync { get; set; }
+
+    [Parameter]
+    public EventCallback OnOpenedAsync { get; set; }
 
     [Parameter]
     public bool Minimizable { get; set; }
@@ -267,8 +279,24 @@ public partial class KalDrawer : IDisposable
             return;
         }
 
+        var previousState = _lastNotifiedState;
         _lastNotifiedState = state;
-        _ = InvokeAsync(() => InitialStateChanged.InvokeAsync(state));
+        _ = InvokeAsync(async () =>
+        {
+            await InitialStateChanged.InvokeAsync(state);
+
+            if (state == KalDrawerState.Hidden && previousState != KalDrawerState.Hidden)
+            {
+                await OnClosed.InvokeAsync();
+                await OnClosedAsync.InvokeAsync();
+            }
+
+            if (state == KalDrawerState.Maximized && previousState != KalDrawerState.Maximized)
+            {
+                await OnOpened.InvokeAsync();
+                await OnOpenedAsync.InvokeAsync();
+            }
+        });
     }
 
     private void ToggleMinimized()

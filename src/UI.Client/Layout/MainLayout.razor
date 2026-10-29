@@ -46,7 +46,11 @@
                @bind-CollapseOnMouseLeave="_collapseLeftDrawerOnMouseLeave"
                ExpandOnHoverDelay="@_expandOnHoverDelay"
                CollapseOnMouseLeaveDelay="@_collapseOnMouseLeaveDelay"
-               PreventClose="@_preventLeftDrawerClose">
+               PreventClose="@_preventLeftDrawerClose"
+               OnClosed="HandleLeftDrawerClosed"
+               OnOpened="HandleLeftDrawerOpened"
+               OnClosedAsync="HandleLeftDrawerClosedAsync"
+               OnOpenedAsync="HandleLeftDrawerOpenedAsync">
         <ChildContent Context="drawer">
             <KalDrawerHeader AdditionalClass="flex items-center justify-between gap-2">
                 <KalDrawerMinimizerTrigger AdditionalClass="rounded p-2 hover:bg-slate-100">
@@ -120,6 +124,22 @@
                                       AdditionalClass="rounded bg-slate-200 px-3 py-2">
                         Drawer schließen
                     </KalDrawerTrigger>
+                    @if (_leftDrawerClosed)
+                    {
+                        <span class="text-sm text-slate-600">OnClosed wurde ausgelöst.</span>
+                    }
+                    @if (_leftDrawerOpened)
+                    {
+                        <span class="text-sm text-slate-600">OnOpened wurde ausgelöst.</span>
+                    }
+                    @if (_leftDrawerClosedAsync)
+                    {
+                        <span class="text-sm text-slate-600">OnClosedAsync wurde ausgelöst.</span>
+                    }
+                    @if (_leftDrawerOpenedAsync)
+                    {
+                        <span class="text-sm text-slate-600">OnOpenedAsync wurde ausgelöst.</span>
+                    }
                 </div>
 
                 <div class="flex flex-col gap-3 text-slate-700 p-3">
@@ -186,6 +206,10 @@
                         <span class="text-xl">Eye</span>
                     </div>
                     <div class="flex items-center gap-3">
+                        <KalIcon Icon="@Icons.EllipsisVertical" AdditionalClass="text-xl border-2"/>
+                        <span class="text-xl">Ellipsis Vertical</span>
+                    </div>
+                    <div class="flex items-center gap-3">
                         <KalIcon Icon="@Icons.ExcelDocument" AdditionalClass="text-xl border-2"/>
                         <span class="text-xl">Excel Document</span>
                     </div>
@@ -228,6 +252,10 @@
                     <div class="flex items-center gap-3">
                         <KalIcon Icon="@Icons.LockOpen" AdditionalClass="text-xl border-2"/>
                         <span class="text-xl">Lock Open</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <KalIcon Icon="@Icons.LocationPin" AdditionalClass="text-xl border-2"/>
+                        <span class="text-xl">Location Pin</span>
                     </div>
                     <div class="flex items-center gap-3">
                         <KalIcon Icon="@Icons.Filter" AdditionalClass="text-xl border-2"/>
@@ -348,8 +376,34 @@
     private bool _minimizeLeftDrawerOnClose;
     private bool _expandLeftDrawerOnHover = true;
     private bool _collapseLeftDrawerOnMouseLeave = true;
+    private bool _leftDrawerClosed;
+    private bool _leftDrawerOpened;
+    private bool _leftDrawerClosedAsync;
+    private bool _leftDrawerOpenedAsync;
     private int _expandOnHoverDelay = 500;
     private int _collapseOnMouseLeaveDelay = 300;
+
+    private void HandleLeftDrawerClosed()
+    {
+        _leftDrawerClosed = true;
+    }
+
+    private void HandleLeftDrawerOpened()
+    {
+        _leftDrawerOpened = true;
+    }
+
+    private Task HandleLeftDrawerClosedAsync()
+    {
+        _leftDrawerClosedAsync = true;
+        return Task.CompletedTask;
+    }
+
+    private Task HandleLeftDrawerOpenedAsync()
+    {
+        _leftDrawerOpenedAsync = true;
+        return Task.CompletedTask;
+    }
 }
 
 <div id="blazor-error-ui" data-nosnippet>
