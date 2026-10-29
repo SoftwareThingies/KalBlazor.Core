@@ -14,6 +14,7 @@ public static class Icons
     public const string Camera = "camera";
     public const string Check = "check";
     public const string CircleInfo = "circle-info";
+    public const string Clock = "clock";
     public const string Clapperboard = "clapperboard";
     public const string Company = "company";
     public const string Document = "document";
