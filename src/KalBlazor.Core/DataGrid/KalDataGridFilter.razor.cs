@@ -3,13 +3,17 @@ using Microsoft.AspNetCore.Components.Web;
 
 namespace SoftwareThingies.KalBlazor.Core.DataGrid;
 
-public partial class KalDataGridFilter : BaseComponent
+public partial class KalDataGridFilter : BaseComponent, IDisposable
 {
     private const string DefaultInputClass = "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition-colors placeholder:text-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200";
     private const string DefaultResetButtonClass = "rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50";
     private string? _pendingFilterText;
     private string? _lastAppliedFilterText;
     private bool _hasInitializedFilterText;
+    private CancellationTokenSource? _filterDelayCancellation;
+
+    [Parameter]
+    public int OnChangeDebounceMilliseconds { get; set; } = 300;
 
     protected override string ComponentClass => "kal-data-grid-filter";
 
@@ -69,6 +73,7 @@ public partial class KalDataGridFilter : BaseComponent
     private Task OnInput(ChangeEventArgs args)
     {
         _pendingFilterText = args.Value?.ToString();
+        _filterDelayCancellation?.Cancel();
 
         if (string.IsNullOrWhiteSpace(_pendingFilterText))
         {
@@ -76,8 +81,35 @@ public partial class KalDataGridFilter : BaseComponent
         }
 
         return FilterMode == KalDataGridFilterMode.OnChange
-            ? ApplyFilterAsync()
+            ? ApplyFilterAfterDelayAsync(_pendingFilterText)
             : Task.CompletedTask;
+    }
+
+    private async Task ApplyFilterAfterDelayAsync(string? filterText)
+    {
+        var cancellation = new CancellationTokenSource();
+        _filterDelayCancellation = cancellation;
+
+        try
+        {
+            await Task.Delay(Math.Max(0, OnChangeDebounceMilliseconds), cancellation.Token);
+            if (!cancellation.IsCancellationRequested)
+            {
+                await FilterContext!.SetFilterTextAsync(filterText);
+            }
+        }
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+        {
+        }
+        finally
+        {
+            if (ReferenceEquals(_filterDelayCancellation, cancellation))
+            {
+                _filterDelayCancellation = null;
+            }
+
+            cancellation.Dispose();
+        }
     }
 
     private Task OnKeyDown(KeyboardEventArgs args)
@@ -89,12 +121,20 @@ public partial class KalDataGridFilter : BaseComponent
 
     private Task ResetAsync()
     {
+        _filterDelayCancellation?.Cancel();
         _pendingFilterText = null;
         return FilterContext!.ClearFilterTextAsync();
     }
 
     private Task ApplyFilterAsync()
     {
+        _filterDelayCancellation?.Cancel();
         return FilterContext!.SetFilterTextAsync(_pendingFilterText);
+    }
+
+    public void Dispose()
+    {
+        _filterDelayCancellation?.Cancel();
+        _filterDelayCancellation?.Dispose();
     }
 }
