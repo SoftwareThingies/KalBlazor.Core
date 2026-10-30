@@ -75,14 +75,11 @@ public partial class KalDataGridFilter : BaseComponent, IDisposable
         _pendingFilterText = args.Value?.ToString();
         _filterDelayCancellation?.Cancel();
 
-        if (string.IsNullOrWhiteSpace(_pendingFilterText))
-        {
-            return FilterContext!.ClearFilterTextAsync();
-        }
-
         return FilterMode == KalDataGridFilterMode.OnChange
             ? ApplyFilterAfterDelayAsync(_pendingFilterText)
-            : Task.CompletedTask;
+            : string.IsNullOrWhiteSpace(_pendingFilterText)
+                ? FilterContext!.ClearFilterTextAsync()
+                : Task.CompletedTask;
     }
 
     private async Task ApplyFilterAfterDelayAsync(string? filterText)
@@ -95,7 +92,14 @@ public partial class KalDataGridFilter : BaseComponent, IDisposable
             await Task.Delay(Math.Max(0, OnChangeDebounceMilliseconds), cancellation.Token);
             if (!cancellation.IsCancellationRequested)
             {
-                await FilterContext!.SetFilterTextAsync(filterText);
+                if (string.IsNullOrWhiteSpace(filterText))
+                {
+                    await FilterContext!.ClearFilterTextAsync();
+                }
+                else
+                {
+                    await FilterContext!.SetFilterTextAsync(filterText);
+                }
             }
         }
         catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
