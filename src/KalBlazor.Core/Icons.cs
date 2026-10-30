@@ -18,6 +18,7 @@ public static class Icons
     public const string Clapperboard = "clapperboard";
     public const string Company = "company";
     public const string Document = "document";
+    public const string Download = "download";
     public const string Eye = "eye";
     public const string ExcelDocument = "excel-document";
     public const string ExcelBasic = "excel-basic";
