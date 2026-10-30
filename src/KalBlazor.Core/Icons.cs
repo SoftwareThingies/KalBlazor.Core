@@ -49,6 +49,7 @@ public static class Icons
     public const string Trash = "trash";
     public const string TriangleExclamation = "triangle-exclamation";
     public const string UserKey = "user-key";
+    public const string UserPen = "user-pen";
     public const string Users = "users";
     public const string VideoCamera = "video-camera";
     public const string X = "x";
