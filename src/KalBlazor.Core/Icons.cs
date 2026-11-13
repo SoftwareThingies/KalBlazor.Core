@@ -55,5 +55,4 @@ public static class Icons
     public const string X = "x";
     public const string ZipDocument = "zip-document";
     public const string ZipBasic = "zip-basic";
-    
 }
