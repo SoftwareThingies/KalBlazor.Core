@@ -36,6 +36,9 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
     private string? _lastFilterTextParameter;
     private bool _lastParentFilterOverride;
     private bool? _lastReportedFilterMatch;
+    private bool? _hasExactFilterMatchCache;
+    private HashSet<TItem>? _filterMatchesCache;
+    private TItem[]? _boundItemsCache;
 
     private KalDataGridContext<TItem> GridContext { get; } = new();
 
@@ -234,8 +237,8 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
     {
         get
         {
-            var items = BoundItems.ToArray();
-            return items.Length > 0 && items.All(IsChildRowExpanded);
+            var items = BoundItems;
+            return items.Count > 0 && items.All(IsChildRowExpanded);
         }
     }
 
@@ -265,11 +268,7 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
 
     private bool HasActiveFilter => !string.IsNullOrWhiteSpace(InheritedFilterText);
 
-    private bool HasExactFilterMatch => !string.IsNullOrWhiteSpace(InheritedFilterText)
-        && (Items ?? []).Any(item => MatchesFilterTerms(
-            item,
-            GetFilterTerms(InheritedFilterText!),
-            FilterMatchMode.AnyTermExact));
+    private bool HasExactFilterMatch => _hasExactFilterMatchCache ??= ComputeHasExactFilterMatch();
 
     private string? EffectiveFilterText => ParentFilterOverride ? null : InheritedFilterText;
 
@@ -277,7 +276,18 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
         ? HighlightClass
         : ParentFilterContext?.HighlightClass ?? DefaultHighlightCss;
 
-    private IEnumerable<TItem> BoundItems => ApplySorting((Items ?? []).Where(IsItemVisible));
+    private IReadOnlyList<TItem> BoundItems => _boundItemsCache ??= ApplySorting((Items ?? []).Where(IsItemVisible)).ToArray();
+
+    /// <summary>
+    /// Drops the cached filter and sort results. Filtering is evaluated once per state change instead of
+    /// per item and render, which keeps re-renders triggered by unrelated components (e.g. drawers) cheap.
+    /// </summary>
+    private void InvalidateFilterCache()
+    {
+        _hasExactFilterMatchCache = null;
+        _filterMatchesCache = null;
+        _boundItemsCache = null;
+    }
 
     private string TableCssClass => $"{(string.IsNullOrWhiteSpace(TableClass) ? DefaultTableClass : TableClass)} {AdditionalTableClass}".Trim();
 
@@ -350,6 +360,7 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
             _sortColumns.Remove(column);
         }
 
+        _boundItemsCache = null;
         return InvokeAsync(StateHasChanged);
     }
 
@@ -429,43 +440,80 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
         ? (Items ?? []).Where(item => !IsLocalFilterMatch(item))
         : [];
 
-    private bool ItemMatchesFilter(TItem item, string filterText)
+    private bool ItemMatchesFilter(TItem item)
     {
-        var filterTerms = GetFilterTerms(filterText);
+        return (_filterMatchesCache ??= ComputeFilterMatches()).Contains(item);
+    }
 
-        if (filterTerms.Length == 0)
+    private bool ComputeHasExactFilterMatch()
+    {
+        if (string.IsNullOrWhiteSpace(InheritedFilterText))
         {
             return false;
         }
 
-        var matchMode = ParentFilterContext is not null
-            ? ParentFilterContext.HasExactFilterMatch
-                ? FilterMatchMode.AnyTermExact
-                : FilterMatchMode.AnyTermContains
-            : (Items ?? []).Any(candidate => MatchesFilterTerms(candidate, filterTerms, FilterMatchMode.AnyTermExact))
-                ? FilterMatchMode.AnyTermExact
-                : FilterMatchMode.AnyTermContains;
+        var filterTerms = GetFilterTerms(InheritedFilterText);
+        var columns = GridContext.Columns;
 
-        return MatchesFilterTerms(item, filterTerms, matchMode);
+        return (Items ?? []).Any(item => MatchesFilterTerms(item, columns, filterTerms, FilterMatchMode.AnyTermExact));
     }
 
-    private bool MatchesFilterTerms(TItem item, IReadOnlyList<string> filterTerms, FilterMatchMode matchMode)
+    private HashSet<TItem> ComputeFilterMatches()
     {
-        return filterTerms.Any(HasFilterTerm);
-
-        bool HasFilterTerm(string filterTerm)
+        if (string.IsNullOrWhiteSpace(InheritedFilterText))
         {
-            return GridContext.Columns.Any(column =>
-            {
-                var searchText = column.GetSearchText(item);
+            return [];
+        }
 
-                return matchMode switch
+        var filterTerms = GetFilterTerms(InheritedFilterText);
+
+        if (filterTerms.Length == 0)
+        {
+            return [];
+        }
+
+        var hasExactFilterMatch = ParentFilterContext?.HasExactFilterMatch ?? HasExactFilterMatch;
+        var matchMode = hasExactFilterMatch
+            ? FilterMatchMode.AnyTermExact
+            : FilterMatchMode.AnyTermContains;
+        var columns = GridContext.Columns;
+
+        return (Items ?? [])
+            .Where(item => MatchesFilterTerms(item, columns, filterTerms, matchMode))
+            .ToHashSet();
+    }
+
+    private static bool MatchesFilterTerms(
+        TItem item,
+        IReadOnlyList<KalGridColumn<TItem>> columns,
+        IReadOnlyList<string> filterTerms,
+        FilterMatchMode matchMode)
+    {
+        if (filterTerms.Count == 0)
+        {
+            return false;
+        }
+
+        foreach (var column in columns)
+        {
+            var searchText = column.GetSearchText(item);
+
+            foreach (var filterTerm in filterTerms)
+            {
+                var isMatch = matchMode switch
                 {
                     FilterMatchMode.AnyTermExact => KalDataGridSearch.Equals(searchText, filterTerm),
                     _ => KalDataGridSearch.Contains(searchText, filterTerm)
                 };
-            });
+
+                if (isMatch)
+                {
+                    return true;
+                }
+            }
         }
+
+        return false;
     }
 
     private static string[] GetFilterTerms(string filterText)
@@ -484,7 +532,7 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
     private bool IsLocalFilterMatch(TItem item)
     {
         return !string.IsNullOrWhiteSpace(EffectiveFilterText)
-            && ItemMatchesFilter(item, EffectiveFilterText!);
+            && ItemMatchesFilter(item);
     }
 
     private bool HasDescendantFilterMatch(TItem item)
@@ -510,7 +558,7 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
         }
 
         return !string.IsNullOrWhiteSpace(InheritedFilterText)
-            && ItemMatchesFilter(item, InheritedFilterText!);
+            && ItemMatchesFilter(item);
     }
 
     private bool ShouldShowChildRow(TItem item)
@@ -546,6 +594,7 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
             _descendantFilterMatches.Remove(item);
         }
 
+        _boundItemsCache = null;
         _ = InvokeAsync(StateHasChanged);
     }
 
@@ -673,7 +722,7 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
 
     private void SetAllChildRowsExpanded(bool isExpanded, bool propagateToDescendants = true)
     {
-        foreach (var item in BoundItems.ToArray())
+        foreach (var item in BoundItems)
         {
             var itemKey = GetItemKey(item);
 
@@ -714,6 +763,7 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
     async Task IKalDataGridFilterContext.SetFilterTextAsync(string? filterText)
     {
         _currentFilterText = filterText;
+        InvalidateFilterCache();
         await InvokeAsync(StateHasChanged);
 
         if (FilterTextChanged.HasDelegate)
@@ -734,6 +784,8 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
 
     protected override void OnParametersSet()
     {
+        InvalidateFilterCache();
+
         foreach (var column in _sortColumns.Where(column => !column.IsSortable).ToArray())
         {
             _sortColumns.Remove(column);
@@ -810,6 +862,7 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
 
     private void OnGridContextStateChanged()
     {
+        InvalidateFilterCache();
         _ = InvokeAsync(StateHasChanged);
     }
 
