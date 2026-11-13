@@ -14,10 +14,11 @@ on:
 permissions:
   contents: write
   pull-requests: read
+  id-token: write
 
 concurrency:
   group: nuget-release
-  queue: max
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -189,19 +190,31 @@ jobs:
           name: SoftwareThingies.KalBlazor.Core-${{ steps.version.outputs.package_version }}
           path: artifacts/*.nupkg
 
+      - name: NuGet login
+        id: nuget-login
+        if: >-
+          (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+          (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+        uses: NuGet/login@v1
+        with:
+          user: mtrax
+
       - name: Publish to NuGet.org
         if: >-
           (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
           (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
         env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
-        run: dotnet nuget push "artifacts/*.nupkg" --api-key "$NUGET_API_KEY" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
-
+          NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
+        run: |
+          dotnet nuget push "artifacts/*.nupkg" \
+            --api-key "$NUGET_API_KEY" \
+            --source "https://api.nuget.org/v3/index.json" \
+            --skip-duplicate
 
       - name: Unlist merged pull request pre-releases
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.version.outputs.source_pr_number != ''
         env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+          NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
           PR_NUMBER: ${{ steps.version.outputs.source_pr_number }}
         run: |
           PACKAGE_ID="softwarethingies.kalblazor.core"
