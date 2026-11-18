@@ -1,0 +1,22 @@
+@inject GridPageState State
+
+<KalDrawerTrigger TargetId="perf-drawer" AdditionalClass="perf-drawer-toggle">Drawer</KalDrawerTrigger>
+
+<AccountGrid Items="@State.Items" FilterText="@State.FilterText" WithChildRows="@State.WithChildRows" />
+
+@if (State.BindDrawerState)
+{
+    <KalDrawer Id="perf-drawer" @bind-InitialState="_drawerState">
+        <ChildContent>Drawer-Inhalt</ChildContent>
+    </KalDrawer>
+}
+else
+{
+    <KalDrawer Id="perf-drawer" InitialState="KalDrawerState.Hidden">
+        <ChildContent>Drawer-Inhalt</ChildContent>
+    </KalDrawer>
+}
+
+@code {
+    private KalDrawerState _drawerState = KalDrawerState.Hidden;
+}

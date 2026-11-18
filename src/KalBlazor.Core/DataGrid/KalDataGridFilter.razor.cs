@@ -11,6 +11,7 @@ public partial class KalDataGridFilter : BaseComponent, IDisposable
     private string? _lastAppliedFilterText;
     private bool _hasInitializedFilterText;
     private CancellationTokenSource? _filterDelayCancellation;
+    private IKalDataGridFilterContext? _subscribedFilterContext;
 
     [Parameter]
     public int OnChangeDebounceMilliseconds { get; set; } = 300;
@@ -59,6 +60,33 @@ public partial class KalDataGridFilter : BaseComponent, IDisposable
         if (FilterContext is null)
         {
             throw new InvalidOperationException($"{nameof(KalDataGridFilter)} must be placed inside the {nameof(KalDataGrid<object>)} Filter template.");
+        }
+
+        if (!ReferenceEquals(_subscribedFilterContext, FilterContext))
+        {
+            if (_subscribedFilterContext is not null)
+            {
+                _subscribedFilterContext.FilterStateChanged -= OnFilterStateChanged;
+            }
+
+            _subscribedFilterContext = FilterContext;
+            _subscribedFilterContext.FilterStateChanged += OnFilterStateChanged;
+        }
+
+        SyncPendingFilterText();
+    }
+
+    private void OnFilterStateChanged()
+    {
+        SyncPendingFilterText();
+        StateHasChanged();
+    }
+
+    private void SyncPendingFilterText()
+    {
+        if (FilterContext is null)
+        {
+            return;
         }
 
         if (!_hasInitializedFilterText
@@ -134,6 +162,11 @@ public partial class KalDataGridFilter : BaseComponent, IDisposable
 
     public void Dispose()
     {
+        if (_subscribedFilterContext is not null)
+        {
+            _subscribedFilterContext.FilterStateChanged -= OnFilterStateChanged;
+        }
+
         _filterDelayCancellation?.Cancel();
         _filterDelayCancellation?.Dispose();
     }

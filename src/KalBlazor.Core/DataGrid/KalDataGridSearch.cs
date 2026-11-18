@@ -68,16 +68,31 @@ internal static class KalDataGridSearch
 
     internal static bool Contains(string? value, string? searchTerm)
     {
-        var normalizedTerm = Normalize(searchTerm);
-        return normalizedTerm.Length > 0
-            && Normalize(value).Contains(normalizedTerm, StringComparison.CurrentCultureIgnoreCase);
+        return ContainsNormalized(Normalize(value), Normalize(searchTerm));
     }
 
     internal static bool Equals(string? value, string? searchTerm)
     {
-        var normalizedTerm = Normalize(searchTerm);
+        return EqualsNormalized(Normalize(value), Normalize(searchTerm));
+    }
+
+    /// <summary>
+    /// Same as <see cref="Contains" /> for values that were already passed through <see cref="Normalize" />.
+    /// </summary>
+    internal static bool ContainsNormalized(string normalizedValue, string normalizedTerm)
+    {
         return normalizedTerm.Length > 0
-            && string.Equals(Normalize(value), normalizedTerm, StringComparison.CurrentCultureIgnoreCase);
+            && normalizedValue.Length >= normalizedTerm.Length
+            && normalizedValue.Contains(normalizedTerm, StringComparison.CurrentCultureIgnoreCase);
+    }
+
+    /// <summary>
+    /// Same as <see cref="Equals(string?, string?)" /> for values that were already passed through <see cref="Normalize" />.
+    /// </summary>
+    internal static bool EqualsNormalized(string normalizedValue, string normalizedTerm)
+    {
+        return normalizedTerm.Length > 0
+            && string.Equals(normalizedValue, normalizedTerm, StringComparison.CurrentCultureIgnoreCase);
     }
 
     internal static string Normalize(string? value)
@@ -87,16 +102,32 @@ internal static class KalDataGridSearch
             return string.Empty;
         }
 
-        var normalized = new StringBuilder(value.Length);
+        var letterOrDigitCount = 0;
 
         foreach (var character in value)
         {
             if (char.IsLetterOrDigit(character))
             {
-                normalized.Append(character);
+                letterOrDigitCount++;
             }
         }
 
-        return normalized.ToString();
+        if (letterOrDigitCount == value.Length)
+        {
+            return value;
+        }
+
+        return string.Create(letterOrDigitCount, value, static (buffer, source) =>
+        {
+            var position = 0;
+
+            foreach (var character in source)
+            {
+                if (char.IsLetterOrDigit(character))
+                {
+                    buffer[position++] = character;
+                }
+            }
+        });
     }
 }
