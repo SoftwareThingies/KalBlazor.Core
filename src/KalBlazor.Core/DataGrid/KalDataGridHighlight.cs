@@ -6,14 +6,13 @@ namespace SoftwareThingies.KalBlazor.Core.DataGrid;
 /// <summary>
 /// Highlights matching text inside a custom DataGrid cell template while preserving its formatting.
 /// </summary>
-public sealed class KalDataGridHighlight : ComponentBase
+public sealed class KalDataGridHighlight : ComponentBase, IDisposable
 {
-    private const string DescendantFilterOverrideCascadeName = "KalDataGridDescendantFilterOverride";
-    private const string DescendantFilterMatchCascadeName = "KalDataGridDescendantFilterMatch";
     private string? _lastFilterText;
     private bool _lastHasMatch;
     private bool _lastParentFilterOverride;
     private bool _hasReportedState;
+    private IKalDataGridFilterContext? _subscribedFilterContext;
 
     /// <summary>
     /// The displayed text to highlight when it matches the grid filter.
@@ -24,13 +23,40 @@ public sealed class KalDataGridHighlight : ComponentBase
     [CascadingParameter]
     private IKalDataGridFilterContext? FilterContext { get; set; }
 
-    [CascadingParameter(Name = DescendantFilterOverrideCascadeName)]
-    private bool ParentFilterOverride { get; set; }
+    [CascadingParameter(Name = KalDataGridDescendantContext.CascadeName)]
+    private KalDataGridDescendantContext? DescendantContext { get; set; }
 
-    [CascadingParameter(Name = DescendantFilterMatchCascadeName)]
-    private KalDataGridDescendantFilterMatchContext? DescendantFilterMatchContext { get; set; }
+    private bool ParentFilterOverride => DescendantContext?.OverrideFilter ?? false;
+
+    private KalDataGridDescendantFilterMatchContext? DescendantFilterMatchContext => DescendantContext?.MatchContext;
 
     protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(_subscribedFilterContext, FilterContext))
+        {
+            if (_subscribedFilterContext is not null)
+            {
+                _subscribedFilterContext.FilterStateChanged -= OnFilterStateChanged;
+            }
+
+            _subscribedFilterContext = FilterContext;
+
+            if (_subscribedFilterContext is not null)
+            {
+                _subscribedFilterContext.FilterStateChanged += OnFilterStateChanged;
+            }
+        }
+
+        UpdateMatchState();
+    }
+
+    private void OnFilterStateChanged()
+    {
+        UpdateMatchState();
+        StateHasChanged();
+    }
+
+    private void UpdateMatchState()
     {
         var filterText = FilterContext?.FilterText;
         var hasMatch = MatchesFilter(Text, filterText);
@@ -81,6 +107,14 @@ public sealed class KalDataGridHighlight : ComponentBase
         if (position < text.Length)
         {
             builder.AddContent(sequence++, text[position..]);
+        }
+    }
+
+    public void Dispose()
+    {
+        if (_subscribedFilterContext is not null)
+        {
+            _subscribedFilterContext.FilterStateChanged -= OnFilterStateChanged;
         }
     }
 

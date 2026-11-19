@@ -1,0 +1,43 @@
+@inject RenderCounter Counter
+
+<KalDataGrid TItem="Account" Items="@Items" FilterText="@FilterText" ShowFilter="@ShowFilter" ItemKey="@(account => account.Id)">
+    <Columns>
+        <KalGridColumn TItem="Account" Title="Kunde" Property="@(account => account.Name)">
+            <CellTemplate Context="account">
+                @{ Counter.CountCell(); }
+                <KalDataGridHighlight Text="@account.Name" />
+            </CellTemplate>
+        </KalGridColumn>
+        <KalGridColumn TItem="Account" Title="Segment" Property="@(account => account.Segment)" />
+        <KalGridColumn TItem="Account" Title="Status" Property="@(account => account.Status)" />
+        <KalGridColumn TItem="Account" Title="Owner" Property="@(account => account.Owner)" />
+        <KalGridColumn TItem="Account" Title="Umsatz" Property="@(account => account.Revenue)" />
+    </Columns>
+    <ChildRowContent Context="account">
+        @if (WithChildRows)
+        {
+            <KalDataGrid TItem="Invoice" Items="@account.Invoices">
+                <Columns>
+                    <KalGridColumn TItem="Invoice" Title="Rechnung" Property="@(invoice => invoice.Number)" />
+                    <KalGridColumn TItem="Invoice" Title="Zeitraum" Property="@(invoice => invoice.Period)" />
+                    <KalGridColumn TItem="Invoice" Title="Betrag" Property="@(invoice => invoice.Amount)" />
+                    <KalGridColumn TItem="Invoice" Title="Status" Property="@(invoice => invoice.Status)" />
+                </Columns>
+            </KalDataGrid>
+        }
+    </ChildRowContent>
+</KalDataGrid>
+
+@code {
+    [Parameter]
+    public List<Account> Items { get; set; } = [];
+
+    [Parameter]
+    public string? FilterText { get; set; }
+
+    [Parameter]
+    public bool WithChildRows { get; set; }
+
+    [Parameter]
+    public bool ShowFilter { get; set; }
+}

@@ -137,8 +137,17 @@ jobs:
           -p:FileVersion=${{ steps.version.outputs.assembly_version }}
           -p:InformationalVersion=${{ steps.version.outputs.semver }}
 
+      # The test project is not built by the Build step, so build it here. Pass the same version
+      # properties so the referenced KalBlazor.Core build matches the one used by pack.
       - name: Test
-        run: dotnet test src/SoftwareThingies.KalBlazor.Core.slnx --configuration Release --no-build --verbosity normal
+        run: >
+          dotnet test Tests/KalBlazor.Core.Tests/KalBlazor.Core.Tests.csproj
+          --configuration Release
+          --verbosity normal
+          -p:Version=${{ steps.version.outputs.semver }}
+          -p:AssemblyVersion=${{ steps.version.outputs.assembly_version }}
+          -p:FileVersion=${{ steps.version.outputs.assembly_version }}
+          -p:InformationalVersion=${{ steps.version.outputs.semver }}
 
       - name: Update project version
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'

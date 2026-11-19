@@ -4,8 +4,6 @@ namespace SoftwareThingies.KalBlazor.Core.DataGrid;
 
 public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
 {
-    private const string DescendantFilterOverrideCascadeName = "KalDataGridDescendantFilterOverride";
-    private const string DescendantFilterMatchCascadeName = "KalDataGridDescendantFilterMatch";
     private const string DefaultTableClass = "w-full min-w-full";
     private const string DefaultHeaderClass = "";
     private const string DefaultHeaderRowClass = "";
@@ -19,15 +17,18 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
     private const string DefaultChildCellClass = "bg-slate-50";
     private const string DefaultChildContentClass = "w-full";
     private const string DefaultHighlightCss = "bg-yellow-200 shadow-sm shadow-gray-400";
+    private static readonly object NullItemKey = new();
     protected override string ComponentClass => "kal-data-grid";
 
     protected override string DefaultClass => "w-full";
 
     private readonly HashSet<object?> _expandedItemKeys = [];
     private readonly HashSet<TItem> _descendantFilterMatches = [];
+    private readonly Dictionary<object, KalDataGridDescendantFilterMatchContext> _descendantFilterMatchContexts = [];
     private readonly List<KalGridColumn<TItem>> _sortColumns = [];
     private readonly Dictionary<KalGridColumn<TItem>, KalDataGridSortDirection> _sortDirections = [];
     private bool _defaultExpansionApplied;
+    private bool _hasRendered;
     private bool? _pendingDescendantExpansion;
     private KalDataGridChildRowExpansionContext? _subscribedParentChildRowExpansionContext;
     private int _lastHandledParentExpansionVersion;
@@ -36,6 +37,17 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
     private string? _lastFilterTextParameter;
     private bool _lastParentFilterOverride;
     private bool? _lastReportedFilterMatch;
+    private bool? _hasExactFilterMatchCache;
+    private HashSet<TItem>? _filterMatchesCache;
+    private TItem[]? _boundItemsCache;
+    private TItem[] _itemsSnapshot = [];
+    private int _refreshVersion;
+    private int _descendantFilterProbeVersion;
+    private (string? FilterText, bool? ParentHasExactFilterMatch, int ParentRefreshVersion)? _lastFilterCacheKey;
+    private (string? FilterText, string HighlightClass, bool HasExactFilterMatch)? _lastNotifiedFilterState;
+    private IKalDataGridFilterContext? _subscribedParentFilterContext;
+    // Thousands of probes and highlights subscribe, so a set avoids the O(n) copy of a multicast delegate per change.
+    private readonly HashSet<Action> _filterStateChangedHandlers = [];
 
     private KalDataGridContext<TItem> GridContext { get; } = new();
 
@@ -47,21 +59,57 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
 
     bool IKalDataGridFilterContext.HasExactFilterMatch => HasExactFilterMatch;
 
+    int IKalDataGridFilterContext.RefreshVersion => RefreshVersion;
+
+    /// <summary>
+    /// Changes whenever this grid or one of its ancestors was refreshed, so nested grids re-evaluate as well.
+    /// </summary>
+    private int RefreshVersion => _refreshVersion + (ParentFilterContext?.RefreshVersion ?? 0);
+
+    event Action? IKalDataGridFilterContext.FilterStateChanged
+    {
+        add
+        {
+            if (value is not null)
+            {
+                _filterStateChangedHandlers.Add(value);
+            }
+        }
+        remove
+        {
+            if (value is not null)
+            {
+                _filterStateChangedHandlers.Remove(value);
+            }
+        }
+    }
+
     [CascadingParameter]
     private KalDataGridChildRowExpansionContext? ParentChildRowExpansionContext { get; set; }
 
     [CascadingParameter]
     private IKalDataGridFilterContext? ParentFilterContext { get; set; }
 
-    [CascadingParameter(Name = DescendantFilterOverrideCascadeName)]
-    private bool ParentFilterOverride { get; set; }
+    [CascadingParameter(Name = KalDataGridDescendantContext.CascadeName)]
+    private KalDataGridDescendantContext? ParentDescendantContext { get; set; }
 
-    [CascadingParameter(Name = DescendantFilterMatchCascadeName)]
-    private KalDataGridDescendantFilterMatchContext? ParentDescendantFilterMatchContext { get; set; }
+    private bool ParentFilterOverride => ParentDescendantContext?.OverrideFilter ?? false;
+
+    private KalDataGridDescendantFilterMatchContext? ParentDescendantFilterMatchContext => ParentDescendantContext?.MatchContext;
+
+    /// <summary>
+    /// Set when this grid is rendered hidden inside a parent's descendant filter probe. Such a grid only has to
+    /// report whether it contains matches, so it skips rendering its table.
+    /// </summary>
+    private bool IsDescendantFilterProbe => ParentDescendantContext?.IsFilterProbe ?? false;
 
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
 
+    /// <summary>
+    /// The items shown by the grid. Filter and sort results are reused as long as the sequence of item instances is
+    /// unchanged. Call <see cref="RefreshAsync" /> after changing properties of existing items in place.
+    /// </summary>
     [Parameter]
     public IEnumerable<TItem>? Items { get; set; }
 
@@ -234,8 +282,8 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
     {
         get
         {
-            var items = BoundItems.ToArray();
-            return items.Length > 0 && items.All(IsChildRowExpanded);
+            var items = BoundItems;
+            return items.Count > 0 && items.All(IsChildRowExpanded);
         }
     }
 
@@ -265,11 +313,14 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
 
     private bool HasActiveFilter => !string.IsNullOrWhiteSpace(InheritedFilterText);
 
-    private bool HasExactFilterMatch => !string.IsNullOrWhiteSpace(InheritedFilterText)
-        && (Items ?? []).Any(item => MatchesFilterTerms(
-            item,
-            GetFilterTerms(InheritedFilterText!),
-            FilterMatchMode.AnyTermExact));
+    private bool HasExactFilterMatch
+    {
+        get
+        {
+            EnsureFilterCache();
+            return _hasExactFilterMatchCache!.Value;
+        }
+    }
 
     private string? EffectiveFilterText => ParentFilterOverride ? null : InheritedFilterText;
 
@@ -277,7 +328,20 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
         ? HighlightClass
         : ParentFilterContext?.HighlightClass ?? DefaultHighlightCss;
 
-    private IEnumerable<TItem> BoundItems => ApplySorting((Items ?? []).Where(IsItemVisible));
+    private IReadOnlyList<TItem> BoundItems => _boundItemsCache ??= ApplySorting((Items ?? []).Where(IsItemVisible)).ToArray();
+
+    /// <summary>
+    /// Drops the cached filter and sort results. Filtering is evaluated once per state change instead of
+    /// per item and render, which keeps re-renders triggered by unrelated components (e.g. drawers) cheap.
+    /// </summary>
+    private void InvalidateFilterCache()
+    {
+        _lastFilterCacheKey = GetFilterCacheKey();
+        _descendantFilterProbeVersion++;
+        _hasExactFilterMatchCache = null;
+        _filterMatchesCache = null;
+        _boundItemsCache = null;
+    }
 
     private string TableCssClass => $"{(string.IsNullOrWhiteSpace(TableClass) ? DefaultTableClass : TableClass)} {AdditionalTableClass}".Trim();
 
@@ -350,6 +414,7 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
             _sortColumns.Remove(column);
         }
 
+        _boundItemsCache = null;
         return InvokeAsync(StateHasChanged);
     }
 
@@ -429,43 +494,136 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
         ? (Items ?? []).Where(item => !IsLocalFilterMatch(item))
         : [];
 
-    private bool ItemMatchesFilter(TItem item, string filterText)
+    /// <summary>
+    /// Renders the hidden child row content of items that don't match the filter themselves, so nested grids can
+    /// report matches in their own items.
+    /// </summary>
+    private RenderFragment RenderDescendantFilterProbes()
     {
-        var filterTerms = GetFilterTerms(filterText);
-
-        if (filterTerms.Length == 0)
+        return builder =>
         {
-            return false;
-        }
-
-        var matchMode = ParentFilterContext is not null
-            ? ParentFilterContext.HasExactFilterMatch
-                ? FilterMatchMode.AnyTermExact
-                : FilterMatchMode.AnyTermContains
-            : (Items ?? []).Any(candidate => MatchesFilterTerms(candidate, filterTerms, FilterMatchMode.AnyTermExact))
-                ? FilterMatchMode.AnyTermExact
-                : FilterMatchMode.AnyTermContains;
-
-        return MatchesFilterTerms(item, filterTerms, matchMode);
+            builder.OpenComponent<KalDataGridDescendantFilterProbeHost>(0);
+            builder.AddComponentParameter(1, nameof(KalDataGridDescendantFilterProbeHost.Version), HasChildRowContent ? _descendantFilterProbeVersion : -1);
+            builder.AddComponentParameter(2, nameof(KalDataGridDescendantFilterProbeHost.ChildContent), RenderDescendantFilterProbeItems());
+            builder.CloseComponent();
+        };
     }
 
-    private bool MatchesFilterTerms(TItem item, IReadOnlyList<string> filterTerms, FilterMatchMode matchMode)
+    private RenderFragment RenderDescendantFilterProbeItems()
     {
-        return filterTerms.Any(HasFilterTerm);
-
-        bool HasFilterTerm(string filterTerm)
+        return builder =>
         {
-            return GridContext.Columns.Any(column =>
+            foreach (var item in DescendantFilterProbeItems)
             {
-                var searchText = column.GetSearchText(item);
+                builder.OpenComponent<KalDataGridDescendantFilterProbe>(0);
+                builder.SetKey(GetDescendantFilterProbeRenderKey(item));
+                builder.AddComponentParameter(1, nameof(KalDataGridDescendantFilterProbe.Item), item);
+                builder.AddComponentParameter(2, nameof(KalDataGridDescendantFilterProbe.FilterText), InheritedFilterText);
+                builder.AddComponentParameter(3, nameof(KalDataGridDescendantFilterProbe.HasExactFilterMatch), HasExactFilterMatch);
+                builder.AddComponentParameter(4, nameof(KalDataGridDescendantFilterProbe.Version), RefreshVersion);
+                builder.AddComponentParameter(5, nameof(KalDataGridDescendantFilterProbe.ChildContent), RenderDescendantFilterProbeContent(item));
+                builder.CloseComponent();
+            }
+        };
+    }
 
-                return matchMode switch
-                {
-                    FilterMatchMode.AnyTermExact => KalDataGridSearch.Equals(searchText, filterTerm),
-                    _ => KalDataGridSearch.Contains(searchText, filterTerm)
-                };
-            });
+    private RenderFragment RenderDescendantFilterProbeContent(TItem item)
+    {
+        return builder =>
+        {
+            builder.OpenElement(0, "div");
+            builder.AddAttribute(1, "class", "hidden");
+            builder.AddAttribute(2, "aria-hidden", "true");
+            builder.OpenComponent<CascadingValue<KalDataGridDescendantContext>>(3);
+            builder.AddComponentParameter(4, "Name", KalDataGridDescendantContext.CascadeName);
+            builder.AddComponentParameter(5, "Value", new KalDataGridDescendantContext(false, CreateDescendantFilterMatchContext(item), IsFilterProbe: true));
+            builder.AddComponentParameter(6, "IsFixed", true);
+            builder.AddComponentParameter(7, "ChildContent", ChildRowContent!(item));
+            builder.CloseComponent();
+            builder.CloseElement();
+        };
+    }
+
+    private bool ItemMatchesFilter(TItem item)
+    {
+        EnsureFilterCache();
+        return _filterMatchesCache!.Contains(item);
+    }
+
+    /// <summary>
+    /// Evaluates the filter for all items in a single pass. Exact matches take precedence over partial matches,
+    /// so both result sets are collected and the effective one is picked afterwards.
+    /// </summary>
+    private void EnsureFilterCache()
+    {
+        if (_filterMatchesCache is not null && _hasExactFilterMatchCache is not null)
+        {
+            return;
         }
+
+        var exactMatches = new HashSet<TItem>();
+        var containsMatches = new HashSet<TItem>();
+        var filterTerms = string.IsNullOrWhiteSpace(InheritedFilterText)
+            ? []
+            : GetFilterTerms(InheritedFilterText)
+                .Select(KalDataGridSearch.Normalize)
+                .Where(term => term.Length > 0)
+                .ToArray();
+
+        if (filterTerms.Length > 0)
+        {
+            var columns = GridContext.Columns;
+
+            foreach (var item in Items ?? [])
+            {
+                var (isExactMatch, isContainsMatch) = EvaluateFilterTerms(item, columns, filterTerms);
+
+                if (isExactMatch)
+                {
+                    exactMatches.Add(item);
+                }
+
+                if (isContainsMatch)
+                {
+                    containsMatches.Add(item);
+                }
+            }
+        }
+
+        _hasExactFilterMatchCache = exactMatches.Count > 0;
+
+        var useExactMatches = ParentFilterContext?.HasExactFilterMatch ?? _hasExactFilterMatchCache.Value;
+        _filterMatchesCache = useExactMatches ? exactMatches : containsMatches;
+    }
+
+    private static (bool IsExactMatch, bool IsContainsMatch) EvaluateFilterTerms(
+        TItem item,
+        IReadOnlyList<KalGridColumn<TItem>> columns,
+        IReadOnlyList<string> normalizedFilterTerms)
+    {
+        var isContainsMatch = false;
+
+        foreach (var column in columns)
+        {
+            var searchText = KalDataGridSearch.Normalize(column.GetSearchText(item));
+
+            if (searchText.Length == 0)
+            {
+                continue;
+            }
+
+            foreach (var filterTerm in normalizedFilterTerms)
+            {
+                if (KalDataGridSearch.EqualsNormalized(searchText, filterTerm))
+                {
+                    return (true, true);
+                }
+
+                isContainsMatch = isContainsMatch || KalDataGridSearch.ContainsNormalized(searchText, filterTerm);
+            }
+        }
+
+        return (false, isContainsMatch);
     }
 
     private static string[] GetFilterTerms(string filterText)
@@ -475,16 +633,10 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
             StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
     }
 
-    private enum FilterMatchMode
-    {
-        AnyTermExact,
-        AnyTermContains
-    }
-
     private bool IsLocalFilterMatch(TItem item)
     {
         return !string.IsNullOrWhiteSpace(EffectiveFilterText)
-            && ItemMatchesFilter(item, EffectiveFilterText!);
+            && ItemMatchesFilter(item);
     }
 
     private bool HasDescendantFilterMatch(TItem item)
@@ -510,7 +662,7 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
         }
 
         return !string.IsNullOrWhiteSpace(InheritedFilterText)
-            && ItemMatchesFilter(item, InheritedFilterText!);
+            && ItemMatchesFilter(item);
     }
 
     private bool ShouldShowChildRow(TItem item)
@@ -524,9 +676,30 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
             || (HasActiveFilter && (ShouldOverrideDescendantFilter(item) || HasDescendantFilterMatch(item)));
     }
 
+    /// <summary>
+    /// The value is cascaded as fixed: child row content is re-rendered by the grid anyway and then reads the
+    /// current value, while a non-fixed cascade would re-render all of its subscribers on every grid render.
+    /// </summary>
+    private KalDataGridDescendantContext CreateChildRowDescendantContext(TItem item)
+    {
+        return new KalDataGridDescendantContext(
+            ShouldOverrideDescendantFilter(item),
+            CreateDescendantFilterMatchContext(item),
+            IsFilterProbe: false);
+    }
+
     private KalDataGridDescendantFilterMatchContext CreateDescendantFilterMatchContext(TItem item)
     {
-        return new KalDataGridDescendantFilterMatchContext(hasMatch => ReportDescendantFilterMatch(item, hasMatch));
+        // Reusing the context per item keeps track of which nested grids reported matches across renders.
+        var itemKey = GetItemKey(item) ?? NullItemKey;
+
+        if (!_descendantFilterMatchContexts.TryGetValue(itemKey, out var context))
+        {
+            context = new KalDataGridDescendantFilterMatchContext(hasMatch => ReportDescendantFilterMatch(item, hasMatch));
+            _descendantFilterMatchContexts[itemKey] = context;
+        }
+
+        return context;
     }
 
     private void ReportDescendantFilterMatch(TItem item, bool hasMatch)
@@ -546,6 +719,7 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
             _descendantFilterMatches.Remove(item);
         }
 
+        _boundItemsCache = null;
         _ = InvokeAsync(StateHasChanged);
     }
 
@@ -673,7 +847,7 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
 
     private void SetAllChildRowsExpanded(bool isExpanded, bool propagateToDescendants = true)
     {
-        foreach (var item in BoundItems.ToArray())
+        foreach (var item in BoundItems)
         {
             var itemKey = GetItemKey(item);
 
@@ -714,6 +888,9 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
     async Task IKalDataGridFilterContext.SetFilterTextAsync(string? filterText)
     {
         _currentFilterText = filterText;
+        InvalidateFilterCache();
+        ResetDescendantFilterStateIfNeeded();
+        NotifyFilterStateChangedIfNeeded();
         await InvokeAsync(StateHasChanged);
 
         if (FilterTextChanged.HasDelegate)
@@ -732,12 +909,24 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
         GridContext.StateChanged += OnGridContextStateChanged;
     }
 
+    /// <summary>
+    /// Re-evaluates filtering and sorting, e.g. after properties of existing items were changed in place.
+    /// </summary>
+    public Task RefreshAsync()
+    {
+        InvalidateFilterCache();
+        _refreshVersion++;
+        NotifyFilterStateChangedIfNeeded();
+        return InvokeAsync(StateHasChanged);
+    }
+
     protected override void OnParametersSet()
     {
         foreach (var column in _sortColumns.Where(column => !column.IsSortable).ToArray())
         {
             _sortColumns.Remove(column);
             _sortDirections.Remove(column);
+            _boundItemsCache = null;
         }
 
         if (!string.Equals(FilterText, _lastFilterTextParameter, StringComparison.Ordinal))
@@ -746,14 +935,29 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
             _lastFilterTextParameter = FilterText;
         }
 
-        if (_lastParentFilterOverride != ParentFilterOverride
-            || !string.Equals(_lastFilterStateText, InheritedFilterText, StringComparison.Ordinal))
+        if (TryUpdateItemsSnapshot() || _lastFilterCacheKey != GetFilterCacheKey())
         {
-            _descendantFilterMatches.Clear();
-            _lastReportedFilterMatch = null;
-            _lastFilterStateText = InheritedFilterText;
-            _lastParentFilterOverride = ParentFilterOverride;
+            InvalidateFilterCache();
         }
+
+        ResetDescendantFilterStateIfNeeded();
+
+        if (!ReferenceEquals(_subscribedParentFilterContext, ParentFilterContext))
+        {
+            if (_subscribedParentFilterContext is not null)
+            {
+                _subscribedParentFilterContext.FilterStateChanged -= OnParentFilterStateChanged;
+            }
+
+            _subscribedParentFilterContext = ParentFilterContext;
+
+            if (_subscribedParentFilterContext is not null)
+            {
+                _subscribedParentFilterContext.FilterStateChanged += OnParentFilterStateChanged;
+            }
+        }
+
+        NotifyFilterStateChangedIfNeeded();
 
         if (!ReferenceEquals(_subscribedParentChildRowExpansionContext, ParentChildRowExpansionContext))
         {
@@ -797,6 +1001,7 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        _hasRendered = true;
         ReportFilterMatchToParent();
 
         if (_pendingDescendantExpansion is not { } isExpanded)
@@ -808,14 +1013,125 @@ public partial class KalDataGrid<TItem> : IDisposable, IKalDataGridFilterContext
         await ChildRowExpansionContext.RequestExpansionAsync(isExpanded);
     }
 
+    private (string? FilterText, bool? ParentHasExactFilterMatch, int ParentRefreshVersion) GetFilterCacheKey()
+    {
+        return (InheritedFilterText, ParentFilterContext?.HasExactFilterMatch, ParentFilterContext?.RefreshVersion ?? 0);
+    }
+
+    /// <summary>
+    /// Parents usually pass the same items again when they re-render for unrelated reasons, e.g. a drawer toggle.
+    /// Comparing the item instances is cheap compared to filtering, so cached results are kept in that case.
+    /// </summary>
+    private bool TryUpdateItemsSnapshot()
+    {
+        var items = Items as IReadOnlyCollection<TItem> ?? Items?.ToArray() ?? [];
+        var hasChanged = items.Count != _itemsSnapshot.Length;
+
+        if (!hasChanged)
+        {
+            var index = 0;
+
+            foreach (var item in items)
+            {
+                if (!IsSameItemInstance(_itemsSnapshot[index++], item))
+                {
+                    hasChanged = true;
+                    break;
+                }
+            }
+        }
+
+        if (hasChanged)
+        {
+            _itemsSnapshot = items.ToArray();
+        }
+
+        return hasChanged;
+    }
+
+    private static bool IsSameItemInstance(TItem previous, TItem current)
+    {
+        return typeof(TItem).IsValueType
+            ? EqualityComparer<TItem>.Default.Equals(previous, current)
+            : ReferenceEquals(previous, current);
+    }
+
+    private void ResetDescendantFilterStateIfNeeded()
+    {
+        if (_lastParentFilterOverride == ParentFilterOverride
+            && string.Equals(_lastFilterStateText, InheritedFilterText, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        _descendantFilterProbeVersion++;
+        _descendantFilterMatches.Clear();
+        _descendantFilterMatchContexts.Clear();
+        _boundItemsCache = null;
+        _lastReportedFilterMatch = null;
+        _lastFilterStateText = InheritedFilterText;
+        _lastParentFilterOverride = ParentFilterOverride;
+    }
+
+    /// <summary>
+    /// The grid cascades itself as a fixed value, because a non-fixed cascade of a reference type re-renders every
+    /// subscriber on every grid render. Descendants are instead notified only when the filter state they read changes.
+    /// </summary>
+    private void NotifyFilterStateChangedIfNeeded()
+    {
+        var filterState = (InheritedFilterText, EffectiveHighlightClass, HasExactFilterMatch);
+
+        if (_lastNotifiedFilterState == filterState)
+        {
+            return;
+        }
+
+        var hasNotifiedBefore = _lastNotifiedFilterState is not null;
+        _lastNotifiedFilterState = filterState;
+
+        if (!hasNotifiedBefore || _filterStateChangedHandlers.Count == 0)
+        {
+            return;
+        }
+
+        // Handlers may re-render and thereby dispose subscribers, so they are invoked on a copy.
+        foreach (var handler in _filterStateChangedHandlers.ToArray())
+        {
+            handler();
+        }
+    }
+
+    private void OnParentFilterStateChanged()
+    {
+        InvalidateFilterCache();
+        ResetDescendantFilterStateIfNeeded();
+        NotifyFilterStateChangedIfNeeded();
+        _ = InvokeAsync(StateHasChanged);
+    }
+
     private void OnGridContextStateChanged()
     {
+        InvalidateFilterCache();
+        NotifyFilterStateChangedIfNeeded();
+
+        // Columns register while a grid renders for the first time. A probe without own child rows renders no rows
+        // and reports its matches after that first render anyway, so re-rendering it would be wasted work.
+        if (IsDescendantFilterProbe && !HasChildRowContent && !_hasRendered)
+        {
+            return;
+        }
+
         _ = InvokeAsync(StateHasChanged);
     }
 
     public void Dispose()
     {
         GridContext.StateChanged -= OnGridContextStateChanged;
+
+        if (_subscribedParentFilterContext is not null)
+        {
+            _subscribedParentFilterContext.FilterStateChanged -= OnParentFilterStateChanged;
+        }
 
         if (_subscribedParentChildRowExpansionContext is not null)
         {

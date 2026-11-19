@@ -1,0 +1,18 @@
+@inject GridPageState State
+
+<button class="perf-rerender" @onclick="() => { }">Re-Render</button>
+<button class="perf-apply-filter" @onclick="() => _filterText = _initialFilterText">Filter</button>
+<button class="perf-clear-filter" @onclick="() => _filterText = null">Reset</button>
+
+<AccountGrid Items="@State.Items" FilterText="@_filterText" WithChildRows="@State.WithChildRows" />
+
+@code {
+    private string? _initialFilterText;
+    private string? _filterText;
+
+    protected override void OnInitialized()
+    {
+        _initialFilterText = State.FilterText;
+        _filterText = State.FilterText;
+    }
+}

@@ -4,7 +4,7 @@
 @attribute [CascadingTypeParameter(nameof(TItem))]
 
 <div @attributes="FilteredAdditionalAttributes" class="@CssClass">
-    <CascadingValue Value="@((IKalDataGridFilterContext)this)" IsFixed="false">
+    <CascadingValue Value="@((IKalDataGridFilterContext)this)" IsFixed="true">
         @if (Columns is not null)
         {
             <CascadingValue Value="GridContext" IsFixed="true">
@@ -14,7 +14,7 @@
             </CascadingValue>
         }
 
-        @if (Filter is not null || ShowFilter)
+        @if (!IsDescendantFilterProbe && (Filter is not null || ShowFilter))
         {
             @if (Filter is not null)
             {
@@ -32,120 +32,112 @@
             }
         }
 
-        <table class="@TableCssClass">
-            @if (IsBound)
-            {
-                <thead class="@HeaderCssClass">
-                    <tr class="@HeaderRowCssClass">
-                        @if (HasDefaultChildRowColumn)
-                        {
-                            <th class="@ExpandHeaderCellCssClass" scope="col">
-                                @RenderDefaultChildRowHeader()
-                            </th>
-                        }
-
-                        @foreach (var entry in GridContext.Entries)
-                        {
-                            @if (entry is KalToggleGridColumn<TItem> childRowColumn)
-                            {
-                                <th @attributes="childRowColumn.HeaderAttributes" class="@childRowColumn.HeaderCssClass" scope="@childRowColumn.Scope">
-                                    @RenderChildRowHeader(childRowColumn)
-                                </th>
-                            }
-                            else if (entry is KalGridColumn<TItem> column)
-                            {
-                                <th @attributes="column.HeaderAttributes" class="@GetHeaderCellCssClass(column)" scope="@column.Scope" aria-sort="@GetHeaderAriaSort(column)">
-                                    @if (column.IsSortable)
-                                    {
-                                        <button type="button"
-                                                class="inline-flex items-center gap-1"
-                                                aria-label="@GetSortButtonAriaLabel(column)"
-                                                @onclick="() => ToggleSortAsync(column)">
-                                            @column.HeaderContent
-                                            <KalIcon Icon="@GetSortIcon(column)"
-                                                     AdditionalClass="@GetSortIconClass(column)" />
-                                        </button>
-                                    }
-                                    else
-                                    {
-                                        @column.HeaderContent
-                                    }
-                                </th>
-                            }
-                        }
-                    </tr>
-                </thead>
-                <tbody class="@BodyCssClass">
-                    @foreach (var item in BoundItems)
-                    {
-                        var isChildRowExpanded = IsChildRowExpanded(item);
-
-                        <tr @key="GetPrimaryRowRenderKey(item)" class="@RowCssClass">
+        @if (!IsDescendantFilterProbe)
+        {
+            <table class="@TableCssClass">
+                @if (IsBound)
+                {
+                    <thead class="@HeaderCssClass">
+                        <tr class="@HeaderRowCssClass">
                             @if (HasDefaultChildRowColumn)
                             {
-                                <td class="@ExpandCellCssClass">
-                                    @RenderDefaultChildRowToggle(item, isChildRowExpanded)
-                                </td>
+                                <th class="@ExpandHeaderCellCssClass" scope="col">
+                                    @RenderDefaultChildRowHeader()
+                                </th>
                             }
 
                             @foreach (var entry in GridContext.Entries)
                             {
                                 @if (entry is KalToggleGridColumn<TItem> childRowColumn)
                                 {
-                                    <td @attributes="childRowColumn.CellAttributes" class="@childRowColumn.CellCssClass">
-                                        @RenderChildRowToggle(childRowColumn, item, isChildRowExpanded)
-                                    </td>
+                                    <th @attributes="childRowColumn.HeaderAttributes" class="@childRowColumn.HeaderCssClass" scope="@childRowColumn.Scope">
+                                        @RenderChildRowHeader(childRowColumn)
+                                    </th>
                                 }
                                 else if (entry is KalGridColumn<TItem> column)
                                 {
-                                    <td @attributes="column.GetCellAttributes(item)" class="@column.CellCssClass">
-                                        @column.RenderCell(item)
-
-                                        @if (column.CollapsedContent is not null)
+                                    <th @attributes="column.HeaderAttributes" class="@GetHeaderCellCssClass(column)" scope="@column.Scope" aria-sort="@GetHeaderAriaSort(column)">
+                                        @if (column.IsSortable)
                                         {
-                                            <div class="@column.CollapsedContentCssClass">
-                                                @column.CollapsedContent(item)
-                                            </div>
+                                            <button type="button"
+                                                    class="inline-flex items-center gap-1"
+                                                    aria-label="@GetSortButtonAriaLabel(column)"
+                                                    @onclick="() => ToggleSortAsync(column)">
+                                                @column.HeaderContent
+                                                <KalIcon Icon="@GetSortIcon(column)"
+                                                         AdditionalClass="@GetSortIconClass(column)" />
+                                            </button>
                                         }
-                                    </td>
+                                        else
+                                        {
+                                            @column.HeaderContent
+                                        }
+                                    </th>
                                 }
                             }
                         </tr>
-
-                        @if (ShouldShowChildRow(item))
+                    </thead>
+                    <tbody class="@BodyCssClass">
+                        @foreach (var item in BoundItems)
                         {
-                            <tr @key="GetChildRowRenderKey(item)" class="@ChildRowCssClass">
-                                <td class="@ChildCellCssClass" colspan="@ChildRowColSpan">
-                                    <div class="@ChildContentCssClass">
-                                        <CascadingValue Name="KalDataGridDescendantFilterOverride" Value="ShouldOverrideDescendantFilter(item)" IsFixed="false">
-                                            <CascadingValue Name="KalDataGridDescendantFilterMatch" Value="CreateDescendantFilterMatchContext(item)" IsFixed="false">
-                                                <CascadingValue Value="ChildRowExpansionContext" IsFixed="false">
+                            var isChildRowExpanded = IsChildRowExpanded(item);
+
+                            <tr @key="GetPrimaryRowRenderKey(item)" class="@RowCssClass">
+                                @if (HasDefaultChildRowColumn)
+                                {
+                                    <td class="@ExpandCellCssClass">
+                                        @RenderDefaultChildRowToggle(item, isChildRowExpanded)
+                                    </td>
+                                }
+
+                                @foreach (var entry in GridContext.Entries)
+                                {
+                                    @if (entry is KalToggleGridColumn<TItem> childRowColumn)
+                                    {
+                                        <td @attributes="childRowColumn.CellAttributes" class="@childRowColumn.CellCssClass">
+                                            @RenderChildRowToggle(childRowColumn, item, isChildRowExpanded)
+                                        </td>
+                                    }
+                                    else if (entry is KalGridColumn<TItem> column)
+                                    {
+                                        <td @attributes="column.GetCellAttributes(item)" class="@column.CellCssClass">
+                                            @column.RenderCell(item)
+
+                                            @if (column.CollapsedContent is not null)
+                                            {
+                                                <div class="@column.CollapsedContentCssClass">
+                                                    @column.CollapsedContent(item)
+                                                </div>
+                                            }
+                                        </td>
+                                    }
+                                }
+                            </tr>
+
+                            @if (ShouldShowChildRow(item))
+                            {
+                                <tr @key="GetChildRowRenderKey(item)" class="@ChildRowCssClass">
+                                    <td class="@ChildCellCssClass" colspan="@ChildRowColSpan">
+                                        <div class="@ChildContentCssClass">
+                                            <CascadingValue Name="@KalDataGridDescendantContext.CascadeName" Value="CreateChildRowDescendantContext(item)" IsFixed="true">
+                                                <CascadingValue Value="ChildRowExpansionContext" IsFixed="true">
                                                     @ChildRowContent!(item)
                                                 </CascadingValue>
                                             </CascadingValue>
-                                        </CascadingValue>
-                                    </div>
-                                </td>
-                            </tr>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
                         }
-                    }
-                </tbody>
-            }
-            else
-            {
-                @ChildContent
-            }
-        </table>
-
-        @foreach (var item in DescendantFilterProbeItems)
-        {
-            <div @key="GetDescendantFilterProbeRenderKey(item)" class="hidden" aria-hidden="true">
-                <CascadingValue Name="KalDataGridDescendantFilterOverride" Value="false" IsFixed="false">
-                    <CascadingValue Name="KalDataGridDescendantFilterMatch" Value="CreateDescendantFilterMatchContext(item)" IsFixed="false">
-                        @ChildRowContent!(item)
-                    </CascadingValue>
-                </CascadingValue>
-            </div>
+                    </tbody>
+                }
+                else
+                {
+                    @ChildContent
+                }
+            </table>
         }
+
+        @RenderDescendantFilterProbes()
     </CascadingValue>
 </div>

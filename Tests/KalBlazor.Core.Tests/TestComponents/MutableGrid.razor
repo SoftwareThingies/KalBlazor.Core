@@ -1,0 +1,22 @@
+<KalDataGrid @ref="Grid" TItem="MutableItem" Items="@Items" FilterText="@FilterText">
+    <Columns>
+        <KalGridColumn TItem="MutableItem" Title="Name" Property="@(item => item.Name)" />
+    </Columns>
+    <ChildRowContent Context="item">
+        <KalDataGrid TItem="MutableItem" Items="@item.Children">
+            <Columns>
+                <KalGridColumn TItem="MutableItem" Title="Name" Property="@(child => child.Name)" />
+            </Columns>
+        </KalDataGrid>
+    </ChildRowContent>
+</KalDataGrid>
+
+@code {
+    public KalDataGrid<MutableItem>? Grid { get; private set; }
+
+    [Parameter]
+    public List<MutableItem> Items { get; set; } = [];
+
+    [Parameter]
+    public string? FilterText { get; set; }
+}

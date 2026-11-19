@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -9,6 +10,7 @@ public partial class KalGridColumn<TItem> : IDisposable
 {
     private const string DefaultCollapsedContentClass = "mt-2 space-y-1 text-xs leading-5 text-slate-500";
     private static readonly RenderFragment EmptyCell = _ => { };
+    private static readonly ConcurrentDictionary<string, Func<TItem, object?>> AccessorCache = new(StringComparer.Ordinal);
     private Expression<Func<TItem, object?>>? _compiledProperty;
     private Func<TItem, object?>? _propertyAccessor;
 
@@ -167,11 +169,17 @@ public partial class KalGridColumn<TItem> : IDisposable
 
     internal string GetSearchText(TItem item)
     {
-        var value = GetPropertyValue(item);
-        var propertyText = Convert.ToString(value, CultureInfo.CurrentCulture);
+        var propertyText = Convert.ToString(GetPropertyValue(item), CultureInfo.CurrentCulture);
         var additionalText = SearchTextSelector?.Invoke(item);
 
-        return string.Join(" ", new[] { propertyText, additionalText }.Where(text => !string.IsNullOrWhiteSpace(text)));
+        if (string.IsNullOrWhiteSpace(additionalText))
+        {
+            return string.IsNullOrWhiteSpace(propertyText) ? string.Empty : propertyText;
+        }
+
+        return string.IsNullOrWhiteSpace(propertyText)
+            ? additionalText
+            : $"{propertyText} {additionalText}";
     }
 
     internal object? GetSortValue(TItem item) => GetPropertyValue(item);
@@ -266,10 +274,52 @@ public partial class KalGridColumn<TItem> : IDisposable
         if (!ReferenceEquals(Property, _compiledProperty))
         {
             _compiledProperty = Property;
-            _propertyAccessor = CompileNullSafeAccessor(Property);
+            _propertyAccessor = GetOrCompileAccessor(Property);
         }
 
         return _propertyAccessor!(item);
+    }
+
+    /// <summary>
+    /// Razor creates a new expression instance for <c>Property="@(item => item.Name)"</c> on every parent render.
+    /// Plain member access chains are therefore cached by their member path so re-renders don't recompile them.
+    /// </summary>
+    private static Func<TItem, object?> GetOrCompileAccessor(Expression<Func<TItem, object?>> expression)
+    {
+        return TryGetMemberPathKey(expression, out var key)
+            ? AccessorCache.GetOrAdd(key, static (_, source) => CompileNullSafeAccessor(source), expression)
+            : CompileNullSafeAccessor(expression);
+    }
+
+    private static bool TryGetMemberPathKey(Expression<Func<TItem, object?>> expression, out string key)
+    {
+        key = string.Empty;
+        var body = expression.Body;
+        var conversionType = string.Empty;
+
+        if (body is UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked } conversion)
+        {
+            conversionType = conversion.Type.AssemblyQualifiedName ?? conversion.Type.FullName ?? conversion.Type.Name;
+            body = conversion.Operand;
+        }
+
+        var members = new List<string>();
+
+        while (body is MemberExpression memberExpression)
+        {
+            var member = memberExpression.Member;
+            members.Add($"{member.DeclaringType?.AssemblyQualifiedName}|{member.Name}|{member.MetadataToken}");
+            body = memberExpression.Expression;
+        }
+
+        if (members.Count == 0 || body != expression.Parameters[0])
+        {
+            return false;
+        }
+
+        members.Reverse();
+        key = $"{conversionType}=>{string.Join("/", members)}";
+        return true;
     }
 
     private static Func<TItem, object?> CompileNullSafeAccessor(Expression<Func<TItem, object?>> expression)
