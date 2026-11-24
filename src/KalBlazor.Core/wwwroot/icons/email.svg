@@ -1,6 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.5">
   <symbol id="email" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
     <rect x="3" y="5" width="18" height="14" rx="2" />
     <path d="m3.5 7 7.4 5.6a1.8 1.8 0 0 0 2.2 0L20.5 7" />
   </symbol>
+  <use href="#email" />
 </svg>
