@@ -2,5 +2,6 @@
   <symbol id="arrow-left" viewBox="0 0 24 24">
     <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M19 12H5" />
     <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="m12 19-7-7 7-7" />
+    <path stroke="none" transform="rotate(180 12 12)" d="M5 11.25h12.2l-5.73-5.72 1.06-1.06L20.06 12l-7.53 7.53-1.06-1.06 5.73-5.72H5a.75.75 0 0 1 0-1.5Z" />
   </symbol>
 </svg>

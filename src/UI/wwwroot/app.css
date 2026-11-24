@@ -83,6 +83,8 @@
     --text-xl--line-height: calc(1.75 / 1.25);
     --text-2xl: 1.5rem;
     --text-2xl--line-height: calc(2 / 1.5);
+    --text-3xl: 1.875rem;
+    --text-3xl--line-height: calc(2.25 / 1.875);
     --font-weight-normal: 400;
     --font-weight-medium: 500;
     --font-weight-semibold: 600;
@@ -1214,6 +1216,9 @@
   }
   .fill-current {
     fill: currentcolor;
+  }
+  .fill-sky-500 {
+    fill: var(--color-sky-500);
   }
   .stroke-current {
     stroke: currentcolor;

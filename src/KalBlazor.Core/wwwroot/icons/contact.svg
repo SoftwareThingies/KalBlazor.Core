@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.5">
+  <symbol id="contact" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="5" width="18" height="14" rx="2" />
+    <circle cx="8.5" cy="10" r="1.75" />
+    <path d="M5.75 16c0-1.5 1.2-2.5 2.75-2.5s2.75 1 2.75 2.5Z
+             M14 10h4m-4 4h4" />
+  </symbol>
+  <use href="#contact" />
+</svg>

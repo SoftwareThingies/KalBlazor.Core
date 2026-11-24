@@ -1,5 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg">
   <symbol id="graph" viewBox="0 0 24 24">
+    <path stroke="none" d="m7 15 4-4 3 3 5-7v12H7Z" />
     <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M4 19V5" />
     <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M4 19h16" />
     <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="m7 15 4-4 3 3 5-7" />

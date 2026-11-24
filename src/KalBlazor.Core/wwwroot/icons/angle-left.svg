@@ -1,5 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg">
   <symbol id="angle-left" viewBox="0 0 24 24">
     <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="m15 18-6-6 6-6" />
+    <path stroke="none" transform="rotate(180 12 12)" d="m8.45 6.55 1.1-1.1L16.1 12l-6.55 6.55-1.1-1.1L13.9 12Z" />
   </symbol>
 </svg>

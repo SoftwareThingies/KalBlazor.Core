@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg">
   <symbol id="search" viewBox="0 0 24 24">
-    <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" />
+    <circle cx="11" cy="11" r="7" stroke="currentColor" />
     <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="m16 16 4 4" />
   </symbol>
 </svg>

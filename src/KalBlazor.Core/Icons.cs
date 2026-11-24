@@ -17,8 +17,10 @@ public static class Icons
     public const string Clock = "clock";
     public const string Clapperboard = "clapperboard";
     public const string Company = "company";
+    public const string Contact = "contact";
     public const string Document = "document";
     public const string Download = "download";
+    public const string Email = "email";
     public const string Eye = "eye";
     public const string ExcelDocument = "excel-document";
     public const string ExcelBasic = "excel-basic";
@@ -40,6 +42,7 @@ public static class Icons
     public const string Pencil = "pencil";
     public const string PdfDocument = "pdf-document";
     public const string PdfBasic = "pdf-basic";
+    public const string Phone = "phone";
     public const string Plus = "plus";
     public const string Printer = "printer";
     public const string QuestionCircle = "question-circle";

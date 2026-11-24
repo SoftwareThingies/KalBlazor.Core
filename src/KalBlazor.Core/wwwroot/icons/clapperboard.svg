@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg">
   <symbol id="clapperboard" viewBox="0 0 24 24">
-    <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M4 9h16v11H4Z" />
-    <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M4 4h16v5H4Z" />
+    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M4 9h16v11H4Z" />
+    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M4 4h16v5H4Z" />
     <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="m4 4 4 5" />
     <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="m9 4 4 5" />
     <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="m14 4 4 5" />
