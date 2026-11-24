@@ -7,7 +7,9 @@ public partial class KalIcon
 {
     protected override string ComponentClass => "kal-icon";
 
-    protected override string DefaultClass => "inline-block shrink-0 overflow-visible align-middle fill-current stroke-current";
+    protected override string DefaultClass => UsesOutlineDefaults
+        ? "inline-block shrink-0 overflow-visible align-middle"
+        : "inline-block shrink-0 overflow-visible align-middle fill-current stroke-current";
 
     [Parameter]
     public string? Icon { get; set; }
@@ -34,7 +36,9 @@ public partial class KalIcon
 
     private string? IconReference => ResolveIconReference();
 
-    private string? StrokeWidth => ResolveStrokeWidth();
+    private bool UsesOutlineDefaults => Icon?.Trim() is Icons.Email or Icons.Phone or Icons.Contact;
+
+    private string? StrokeWidth => ResolveStrokeWidth() ?? (UsesOutlineDefaults ? "1.5" : null);
 
     private string IconStyle
     {
