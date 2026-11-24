@@ -2,5 +2,7 @@
   <symbol id="x" viewBox="0 0 24 24">
     <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M18 6 6 18" />
     <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="m6 6 12 12" />
+    <rect x="2.75" y="11" width="18.5" height="2" rx=".75" stroke="none" transform="rotate(45 12 12)" />
+    <rect x="2.75" y="11" width="18.5" height="2" rx=".75" stroke="none" transform="rotate(-45 12 12)" />
   </symbol>
 </svg>

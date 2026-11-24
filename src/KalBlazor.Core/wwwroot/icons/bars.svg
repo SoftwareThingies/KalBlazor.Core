@@ -3,5 +3,8 @@
     <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M4 6h16" />
     <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M4 12h16" />
     <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M4 18h16" />
+    <rect x="3.25" y="5.25" width="17.5" height="1.5" rx=".75" stroke="none" />
+    <rect x="3.25" y="11.25" width="17.5" height="1.5" rx=".75" stroke="none" />
+    <rect x="3.25" y="17.25" width="17.5" height="1.5" rx=".75" stroke="none" />
   </symbol>
 </svg>

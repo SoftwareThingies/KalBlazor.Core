@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg">
   <symbol id="filter" viewBox="0 0 24 24">
-    <path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="miter" d="M3 4h18l-7.5 8.5V19l-3 1v-7.5L3 4z" />
+    <path stroke="currentColor" stroke-width="1.75" stroke-linejoin="miter" d="M3 4h18l-7.5 8.5V19l-3 1v-7.5L3 4z" />
   </symbol>
 </svg>

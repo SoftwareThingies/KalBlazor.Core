@@ -1,5 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg">
   <symbol id="download" viewBox="0 0 24 24">
     <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M12 3v12m0 0 5-5m-5 5-5-5M5 17v4h14v-4" />
+    <path stroke="none" d="M11.25 3a.75.75 0 0 1 1.5 0v10.2l3.72-3.73 1.06 1.06L12 16.06l-5.53-5.53 1.06-1.06 3.72 3.73Z" />
+    <path stroke="none" d="M4.25 17h1.5v3.25h12.5V17h1.5v4.75H4.25Z" />
   </symbol>
 </svg>

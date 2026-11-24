@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg">
   <symbol id="trash" viewBox="0 0 24 24">
     <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M3 6h18" />
-    <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M8 6V4h8v2" />
-    <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="m19 6-1 14H6L5 6" />
+    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M8 6V4h8v2" />
+    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="m19 6-1 14H6L5 6" />
     <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M10 11v5" />
     <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M14 11v5" />
   </symbol>

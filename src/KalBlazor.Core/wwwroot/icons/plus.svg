@@ -2,5 +2,7 @@
   <symbol id="plus" viewBox="0 0 24 24">
     <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M12 5v14" />
     <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" />
+    <rect x="4.25" y="11.25" width="15.5" height="1.5" rx=".75" stroke="none" />
+    <rect x="11.25" y="4.25" width="1.5" height="15.5" rx=".75" stroke="none" />
   </symbol>
 </svg>

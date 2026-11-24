@@ -5,11 +5,16 @@ namespace SoftwareThingies.KalBlazor.Core;
 
 public partial class KalIcon
 {
+    private const string BuiltInIconPath = "/_content/SoftwareThingies.KalBlazor.Core/icons";
+
     protected override string ComponentClass => "kal-icon";
 
-    protected override string DefaultClass => UsesOutlineDefaults
-        ? "inline-block shrink-0 overflow-visible align-middle"
-        : "inline-block shrink-0 overflow-visible align-middle fill-current stroke-current";
+    protected override string DefaultClass => BuiltInIconName switch
+    {
+        Icons.Email or Icons.Phone or Icons.Contact => "inline-block shrink-0 overflow-visible align-middle",
+        null => "inline-block shrink-0 overflow-visible align-middle fill-current stroke-current",
+        _ => "inline-block shrink-0 overflow-visible align-middle stroke-current"
+    };
 
     [Parameter]
     public string? Icon { get; set; }
@@ -18,7 +23,7 @@ public partial class KalIcon
     public string? AriaLabel { get; set; }
 
     [Parameter]
-    public string IconBasePath { get; set; } = "/_content/SoftwareThingies.KalBlazor.Core/icons";
+    public string IconBasePath { get; set; } = BuiltInIconPath;
 
     [Parameter]
     public string? SymbolId { get; set; }
@@ -36,7 +41,28 @@ public partial class KalIcon
 
     private string? IconReference => ResolveIconReference();
 
-    private bool UsesOutlineDefaults => Icon?.Trim() is Icons.Email or Icons.Phone or Icons.Contact;
+    private string? BuiltInIconName
+    {
+        get
+        {
+            var reference = IconReference;
+            if (reference is null || !reference.StartsWith(BuiltInIconPath + "/", StringComparison.Ordinal))
+            {
+                return null;
+            }
+
+            return reference[(reference.IndexOf('#') + 1)..];
+        }
+    }
+
+    private bool UsesOutlineDefaults => BuiltInIconName is Icons.Email or Icons.Phone or Icons.Contact;
+
+    private string? DefaultFill => BuiltInIconName switch
+    {
+        null => null,
+        Icons.EllipsisVertical => "currentColor",
+        _ => "none"
+    };
 
     private string? StrokeWidth => ResolveStrokeWidth() ?? (UsesOutlineDefaults ? "1.5" : null);
 
